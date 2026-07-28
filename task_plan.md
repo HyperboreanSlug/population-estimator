@@ -9,14 +9,16 @@ Physical infrastructure primary. Census demoted to comparison.
 ### Phase 1: Infrastructure + Water/Wastewater
 Status: in_progress
 - [x] Project scaffolding (PLAN.md, README, pyproject.toml)
-- [ ] Package structure (src/popest/)
-- [ ] constants.py — per-capita rates with uncertainty
-- [ ] geo.py — FIPS codes, county list
-- [ ] water.py — USGS National Water Use client
-- [ ] methods/water_budget.py — Method A
-- [ ] methods/wastewater.py — Method B (EPA NPDES)
-- [ ] cli.py — entry point
-- [ ] Verify national estimate
+- [x] Package structure (src/popest/)
+- [x] constants.py — per-capita rates with uncertainty
+- [x] geo.py — FIPS codes, county list
+- [x] water.py — USGS ScienceBase client (2015 county data)
+- [x] methods/water_budget.py — Method A (WORKING: 356M central)
+- [x] wastewater.py — EPA NPDES client (301 MB download)
+- [x] methods/wastewater.py — Method B (code ready, needs data download)
+- [x] cli.py — entry point with water + wastewater commands
+- [ ] Run wastewater method (requires 301 MB EPA download)
+- [ ] Cross-check water vs wastewater estimates
 
 ### Phase 2: Energy and Waste
 Status: pending
