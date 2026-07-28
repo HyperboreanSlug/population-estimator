@@ -1,12 +1,15 @@
 # Population Estimator
 
-Multi-source estimation of the true United States population at county-level granularity.
+Multi-source estimation of the true United States population at county-level
+granularity, using physical infrastructure as primary evidence.
 
-Combines census data, vital statistics, administrative records, migration data,
-housing indicators, and geospatial proxies into a precision-weighted ensemble
-estimate with uncertainty bounds for all 3,143 counties.
+Water consumption, wastewater chemistry (nitrogen, ammonia, BOD), energy use,
+waste generation, food supply, and healthcare utilization reveal actual human
+presence independent of self-report surveys. Census data is included for
+comparison only, not as an anchor.
 
-See [PLAN.md](PLAN.md) for full methodology and data source documentation.
+See [PLAN.md](PLAN.md) for full methodology, data sources, and per-capita
+calibration constants.
 
 ## Quick Start
 
@@ -17,4 +20,5 @@ popest run --year 2024
 
 ## Output
 
-CSV with per-county estimates: FIPS, name, state, point estimate, 90% CI bounds, method weights.
+- Per-county CSV: FIPS, name, state, estimate, 90% CI, method contributions
+- National discrepancy report: each method's estimate vs census
