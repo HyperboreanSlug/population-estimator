@@ -18,8 +18,12 @@ def main():
     ww_p = sub.add_parser("wastewater", help="Run wastewater flow method")
     ww_p.add_argument("--no-cache", action="store_true")
 
+    energy_p = sub.add_parser("energy", help="Run energy consumption method")
+
+    waste_p = sub.add_parser("waste", help="Run waste/food/vehicle methods")
+
     run_p = sub.add_parser("run", help="Run full pipeline")
-    run_p.add_argument("--method", choices=["water", "wastewater", "all"], default="all")
+    run_p.add_argument("--method", choices=["water", "wastewater", "energy", "waste", "all"], default="all")
 
     args = parser.parse_args()
 
@@ -31,9 +35,14 @@ def main():
         _run_water(not args.no_cache)
     elif args.command == "wastewater":
         _run_wastewater(not args.no_cache)
+    elif args.command == "energy":
+        _run_energy()
+    elif args.command == "waste":
+        _run_waste()
     elif args.command == "run":
         _run_water(True)
-        _run_wastewater(True)
+        _run_energy()
+        _run_waste()
 
 
 def _run_water(use_cache: bool):
@@ -101,6 +110,51 @@ def _run_wastewater(use_cache: bool):
     out_path = out_dir / "wastewater_flow.csv"
     result.to_csv(out_path, index=False)
     print(f"\n  County detail saved: {out_path}")
+
+
+def _run_energy():
+    from popest.methods.energy import estimate, national_summary
+
+    print("Computing energy consumption population estimate...")
+    result = estimate()
+    summary = national_summary(result)
+
+    print(f"\n{'='*50}")
+    print(f"  ENERGY (ELECTRICITY) POPULATION ESTIMATE")
+    print(f"{'='*50}")
+    print(f"  States:            {summary.get('states', 0)}")
+    print(f"  Central:           {summary.get('central', 0):>15,.0f}")
+    print(f"  Low:               {summary.get('low', 0):>15,.0f}")
+    print(f"  High:              {summary.get('high', 0):>15,.0f}")
+    print(f"{'='*50}")
+
+    out_dir = Path("output")
+    out_dir.mkdir(exist_ok=True)
+    out_path = out_dir / "energy_electricity.csv"
+    result.to_csv(out_path, index=False)
+    print(f"\n  State detail saved: {out_path}")
+
+
+def _run_waste():
+    from popest.methods.waste_food import estimate, summary_table
+
+    print("Computing waste/food/vehicle population estimates...")
+    results = estimate()
+    table = summary_table(results)
+
+    print(f"\n{'='*60}")
+    print(f"  WASTE / FOOD / VEHICLE POPULATION ESTIMATES (national)")
+    print(f"{'='*60}")
+    for _, row in table.iterrows():
+        print(f"  {row['method']:<12} central: {row['central']:>15,.0f}  "
+              f"range: {row['low']:,.0f} - {row['high']:,.0f}")
+    print(f"{'='*60}")
+
+    out_dir = Path("output")
+    out_dir.mkdir(exist_ok=True)
+    out_path = out_dir / "waste_food_vehicle.csv"
+    table.to_csv(out_path, index=False)
+    print(f"\n  Saved: {out_path}")
 
 
 if __name__ == "__main__":
