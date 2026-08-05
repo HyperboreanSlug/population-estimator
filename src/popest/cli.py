@@ -22,8 +22,11 @@ def main():
     sub.add_parser("buildings", help="Building footprints method")
     sub.add_parser("consumption", help="SNAP/wireless/grocery method")
     sub.add_parser("irs", help="IRS tax filer method")
+    sub.add_parser("bls", help="BLS employment method")
     sub.add_parser("ensemble", help="Full ensemble (all methods)")
     sub.add_parser("sensitivity", help="Sensitivity analysis")
+    sub.add_parser("download", help="Download all data sources")
+    sub.add_parser("verify", help="Verify downloaded data")
 
     args = parser.parse_args()
 
@@ -42,8 +45,11 @@ def main():
         "buildings": _run_buildings,
         "consumption": _run_consumption,
         "irs": _run_irs,
+        "bls": _run_bls,
         "ensemble": _run_ensemble,
         "sensitivity": _run_sensitivity,
+        "download": _run_download,
+        "verify": _run_verify,
     }
     dispatch[args.command]()
 
@@ -172,10 +178,45 @@ def _run_irs():
     from popest.irs import estimate_from_irs
 
     results = estimate_from_irs()
-    _print_header("IRS TAX FILERS")
-    for key, val in sorted(results.items()):
-        print(f"  {key:<20} {val:>15,.0f}")
+    _print_header("IRS TAX FILERS (REAL DATA)")
+    if "error" in results:
+        print(f"  ERROR: {results['error']}")
+        return results
+    print(f"  Raw exemptions (N2): {results['raw_exemptions']:>15,}")
+    print(f"  Raw returns (N1):    {results['raw_returns']:>15,}")
+    for key in ["irs_central", "irs_low", "irs_high"]:
+        if key in results:
+            print(f"  {key:<20} {results[key]:>15,.0f}")
+    print(f"  Source: {results.get('source', 'N/A')}")
     return results
+
+
+def _run_bls():
+    from popest.bls import estimate_from_bls
+
+    results = estimate_from_bls()
+    _print_header("BLS EMPLOYMENT (REAL DATA)")
+    if "error" in results:
+        print(f"  ERROR: {results['error']}")
+        return results
+    print(f"  Total employed: {results['employed']:>15,}")
+    for key in ["bls_central", "bls_low", "bls_high"]:
+        if key in results:
+            print(f"  {key:<20} {results[key]:>15,.0f}")
+    print(f"  Source: {results.get('source', 'N/A')}")
+    if results.get("disclaimer"):
+        print(f"  {results['disclaimer']}")
+    return results
+
+
+def _run_download():
+    from popest.download_comprehensive import download_remaining
+    download_remaining()
+
+
+def _run_verify():
+    from popest.verify_downloads import verify_all
+    verify_all()
 
 
 def _run_ensemble():
@@ -256,14 +297,21 @@ def _run_ensemble():
     except Exception as e:
         print(f"  FAILED: {e}")
 
-    print("\n[10/11] IRS...")
+    print("\n[10/12] IRS...")
     try:
         r = _run_irs()
         estimates["irs"] = r.get("irs_central", 0)
     except Exception as e:
         print(f"  FAILED: {e}")
 
-    print("\n[11/11] Census (for comparison)...")
+    print("\n[11/12] BLS...")
+    try:
+        r = _run_bls()
+        estimates["bls"] = r.get("bls_central", 0)
+    except Exception as e:
+        print(f"  FAILED: {e}")
+
+    print("\n[12/12] Census (for comparison)...")
     census_pop = 0
     try:
         census_df = fetch_census_population_2020()

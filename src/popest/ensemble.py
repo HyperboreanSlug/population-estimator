@@ -9,20 +9,21 @@ import pandas as pd
 
 
 METHOD_WEIGHTS = {
-    "water": 0.18,
-    "wastewater": 0.15,
-    "energy": 0.07,
+    "water": 0.16,
+    "wastewater": 0.13,
+    "energy": 0.06,
     "msw": 0.05,
-    "gasoline": 0.05,
+    "gasoline": 0.04,
     "vehicles": 0.04,
-    "healthcare": 0.07,
-    "housing": 0.08,
-    "vitals": 0.06,
-    "buildings": 0.08,
+    "healthcare": 0.06,
+    "housing": 0.07,
+    "vitals": 0.05,
+    "buildings": 0.07,
     "snap": 0.03,
-    "wireless": 0.04,
-    "grocery": 0.04,
-    "irs": 0.06,
+    "wireless": 0.03,
+    "grocery": 0.03,
+    "irs": 0.08,
+    "bls": 0.05,
 }
 
 CENSUS_WEIGHT_CAP = 0.15

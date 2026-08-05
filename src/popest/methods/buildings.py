@@ -1,42 +1,38 @@
 """Method: Building footprints population estimate.
 
 P = Total_Buildings × Residential_Fraction × Occupancy × Persons_per_Household
+
+Uses REAL downloaded GeoJSON data. See popest.buildings for source.
 """
 
 import pandas as pd
 
-from popest.buildings import fetch_building_counts_by_state
-
-RESIDENTIAL_FRACTION = 0.72
-OCCUPANCY_RATE = 0.87
-PERSONS_PER_HOUSEHOLD = 2.6
+from popest.buildings import estimate_from_buildings, get_building_counts
 
 
 def estimate() -> pd.DataFrame:
     """State-level population from building footprint counts."""
-    counts = fetch_building_counts_by_state()
-    if counts.empty:
-        return pd.DataFrame()
+    results = estimate_from_buildings()
+    counts = get_building_counts()
 
-    for label, res_frac, occ, pph in [
-        ("central", RESIDENTIAL_FRACTION, OCCUPANCY_RATE, PERSONS_PER_HOUSEHOLD),
-        ("low", 0.78, 0.90, 2.4),
-        ("high", 0.66, 0.84, 2.8),
-    ]:
-        counts[f"pop_buildings_{label}"] = (
-            counts["buildings"] * res_frac * occ * pph
-        )
-
-    return counts
+    rows = []
+    for state, count in counts["downloaded_states"].items():
+        rows.append({
+            "state": state,
+            "buildings": count,
+            "pop_buildings_central": count * 0.72 * 0.87 * 2.6,
+            "pop_buildings_low": count * 0.78 * 0.90 * 2.4,
+            "pop_buildings_high": count * 0.66 * 0.84 * 2.8,
+        })
+    return pd.DataFrame(rows)
 
 
 def national_summary(df: pd.DataFrame) -> dict:
-    if df.empty:
-        return {}
+    results = estimate_from_buildings()
     return {
         "states": len(df),
-        "total_buildings": int(df["buildings"].sum()),
-        "central": float(df["pop_buildings_central"].sum()),
-        "low": float(df["pop_buildings_low"].sum()),
-        "high": float(df["pop_buildings_high"].sum()),
+        "total_buildings": results["national_total_buildings"],
+        "central": results["buildings_central"],
+        "low": results["buildings_low"],
+        "high": results["buildings_high"],
     }
