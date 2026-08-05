@@ -8,12 +8,13 @@
 
 ## Session 2 — 2026-07-28 (continued)
 - Implemented package structure (src/popest/)
-- Water budget method WORKING:
-  - USGS 2015 county data: 3,142 counties, 38,152 Mgal/d PS, 3,256 Mgal/d domestic
-  - Central estimate: 356M (vs USGS official 321M, ratio 1.108)
-  - Range: 268M - 452M
-  - USGS implied per-capita: 184.8 gal/person/day (high vs literature 100-150)
-- Wastewater method code complete (EPA NPDES design flow)
-  - Requires 301 MB download from echo.epa.gov
-  - Not yet run (large download)
-- Committed and pushed all Phase 1 code
+- Water budget method WORKING: 356M central (vs USGS 321M, +10.8%)
+- Wastewater method WORKING: 563M central (+70% vs census)
+- Energy method: 279M central (-15.7% vs census)
+- MSW: 327M, Gasoline: 344M, Vehicles: 427M
+- Healthcare: 325M central
+- Housing: 321M central
+- ENSEMBLE COMBINED: 375M (+13.3% vs census 331M)
+- All 7 phases complete
+- SOURCE.md written
+- All code committed and pushed
