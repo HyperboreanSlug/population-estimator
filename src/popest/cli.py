@@ -18,6 +18,10 @@ def main():
     sub.add_parser("waste", help="Waste/food/vehicle methods")
     sub.add_parser("healthcare", help="Healthcare utilization method")
     sub.add_parser("housing", help="Housing unit method")
+    sub.add_parser("vitals", help="Births/deaths vital statistics")
+    sub.add_parser("buildings", help="Building footprints method")
+    sub.add_parser("consumption", help="SNAP/wireless/grocery method")
+    sub.add_parser("irs", help="IRS tax filer method")
     sub.add_parser("ensemble", help="Full ensemble (all methods)")
     sub.add_parser("sensitivity", help="Sensitivity analysis")
 
@@ -34,6 +38,10 @@ def main():
         "waste": _run_waste,
         "healthcare": _run_healthcare,
         "housing": _run_housing,
+        "vitals": _run_vitals,
+        "buildings": _run_buildings,
+        "consumption": _run_consumption,
+        "irs": _run_irs,
         "ensemble": _run_ensemble,
         "sensitivity": _run_sensitivity,
     }
@@ -126,6 +134,50 @@ def _run_housing():
     return summary
 
 
+def _run_vitals():
+    from popest.methods.vitals import estimate
+
+    results = estimate()
+    _print_header("VITAL STATISTICS (BIRTHS/DEATHS)")
+    for key, val in sorted(results.items()):
+        print(f"  {key:<20} {val:>15,.0f}")
+    return results
+
+
+def _run_buildings():
+    from popest.methods.buildings import estimate, national_summary
+
+    result = estimate()
+    summary = national_summary(result)
+    _print_header("BUILDING FOOTPRINTS")
+    print(f"  States:    {summary.get('states', 0)}")
+    print(f"  Buildings: {summary.get('total_buildings', 0):>15,}")
+    print(f"  Central:   {summary.get('central', 0):>15,.0f}")
+    print(f"  Range:     {summary.get('low', 0):,.0f} - {summary.get('high', 0):,.0f}")
+    _save(result, "buildings.csv")
+    return summary
+
+
+def _run_consumption():
+    from popest.consumption import estimate_consumption
+
+    results = estimate_consumption()
+    _print_header("CONSUMPTION (SNAP/WIRELESS/GROCERY)")
+    for key, val in sorted(results.items()):
+        print(f"  {key:<20} {val:>15,.0f}")
+    return results
+
+
+def _run_irs():
+    from popest.irs import estimate_from_irs
+
+    results = estimate_from_irs()
+    _print_header("IRS TAX FILERS")
+    for key, val in sorted(results.items()):
+        print(f"  {key:<20} {val:>15,.0f}")
+    return results
+
+
 def _run_ensemble():
     from popest.ensemble import combine_national
     from popest.discrepancy import discrepancy_report
@@ -181,7 +233,37 @@ def _run_ensemble():
     except Exception as e:
         print(f"  FAILED: {e}")
 
-    print("\n[7/7] Census (for comparison)...")
+    print("\n[7/11] Vitals...")
+    try:
+        r = _run_vitals()
+        estimates["vitals"] = r.get("births_central", 0)
+    except Exception as e:
+        print(f"  FAILED: {e}")
+
+    print("\n[8/11] Buildings...")
+    try:
+        s = _run_buildings()
+        estimates["buildings"] = s["central"]
+    except Exception as e:
+        print(f"  FAILED: {e}")
+
+    print("\n[9/11] Consumption...")
+    try:
+        r = _run_consumption()
+        estimates["snap"] = r.get("snap_central", 0)
+        estimates["wireless"] = r.get("wireless_central", 0)
+        estimates["grocery"] = r.get("grocery_central", 0)
+    except Exception as e:
+        print(f"  FAILED: {e}")
+
+    print("\n[10/11] IRS...")
+    try:
+        r = _run_irs()
+        estimates["irs"] = r.get("irs_central", 0)
+    except Exception as e:
+        print(f"  FAILED: {e}")
+
+    print("\n[11/11] Census (for comparison)...")
     census_pop = 0
     try:
         census_df = fetch_census_population_2020()
