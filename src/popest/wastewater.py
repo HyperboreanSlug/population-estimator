@@ -16,135 +16,112 @@ CACHE_DIR = Path("data/epa")
 
 
 def download_npdes_part1(use_cache: bool = True) -> Path:
-    """Download ICIS-NPDES Part 1 ZIP (301 MB). Returns path to ZIP."""
+    """Download ICIS-NPDES Part 1 ZIP (~332 MB). Returns path to ZIP."""
     cache_path = CACHE_DIR / "npdes_downloads.zip"
-    if use_cache and cache_path.exists():
+    if use_cache and cache_path.exists() and cache_path.stat().st_size > 300_000_000:
         return cache_path
     cache_path.parent.mkdir(parents=True, exist_ok=True)
-    print("  Downloading ICIS-NPDES Part 1 (~301 MB)...")
-    resp = requests.get(NPDES_PART1_URL, timeout=600, stream=True)
+    print("  Downloading ICIS-NPDES Part 1 (~332 MB)...")
+    resp = requests.get(NPDES_PART1_URL, timeout=900, stream=True)
     resp.raise_for_status()
-    total = int(resp.headers.get("content-length", 0))
-    downloaded = 0
     with open(cache_path, "wb") as f:
         for chunk in resp.iter_content(chunk_size=1024 * 1024):
             f.write(chunk)
-            downloaded += len(chunk)
-            if total > 0:
-                pct = downloaded / total * 100
-                print(f"\r  {downloaded // (1024*1024)} MB / {total // (1024*1024)} MB ({pct:.0f}%)", end="", flush=True)
-    print()
     return cache_path
 
 
-def load_npdes_facilities(zip_path: Path) -> pd.DataFrame:
-    """Extract and load facility/permit data from NPDES ZIP."""
-    with zipfile.ZipFile(zip_path) as zf:
-        names = zf.namelist()
-        fac_file = _find_file(names, ["PROGRAM", "facility", "FACILITY"])
-        permit_file = _find_file(names, ["PERMIT", "permit"])
+def load_municipal_flows(zip_path: Path) -> pd.DataFrame:
+    """Load municipal WWTP design flows with county FIPS.
 
-        if fac_file:
-            with zf.open(fac_file) as f:
-                fac_df = pd.read_csv(f, dtype=str, low_memory=False)
-        else:
-            fac_df = pd.DataFrame()
-
-        if permit_file:
-            with zf.open(permit_file) as f:
-                permit_df = pd.read_csv(f, dtype=str, low_memory=False)
-        else:
-            permit_df = pd.DataFrame()
-
-    return fac_df, permit_df, names
-
-
-def _find_file(names: list[str], keywords: list[str]) -> str | None:
-    for name in names:
-        upper = name.upper()
-        if upper.endswith(".CSV") or upper.endswith(".TXT"):
-            for kw in keywords:
-                if kw in upper:
-                    return name
-    return None
-
-
-def extract_municipal_wwtps(
-    fac_df: pd.DataFrame,
-    permit_df: pd.DataFrame,
-) -> pd.DataFrame:
-    """Filter for municipal wastewater treatment plants.
-
-    Identifies facilities with SIC 4952 (Sewerage Systems) or
-    NAICS 221320 (Sewage Treatment Facilities).
+    Joins ICIS_PERMITS (design flow) with NPDES_SICS (SIC 4952)
+    and ICIS_FACILITIES (county code).
     """
-    result = fac_df.copy()
+    with zipfile.ZipFile(zip_path) as zf:
+        print("  Loading ICIS_PERMITS...")
+        with zf.open("ICIS_PERMITS.csv") as f:
+            permits = pd.read_csv(f, dtype=str, low_memory=False,
+                                  usecols=lambda c: c in [
+                                      "ACTIVITY_ID", "EXTERNAL_PERMIT_NMBR",
+                                      "TOTAL_DESIGN_FLOW_NMBR",
+                                      "ACTUAL_AVERAGE_FLOW_NMBR",
+                                      "PERMIT_TYPE_CODE",
+                                      "PERMIT_STATUS_CODE",
+                                      "MAJOR_MINOR_STATUS_FLAG",
+                                  ])
 
-    sic_col = _find_col(result, ["SIC", "PRIMARY_SIC", "SIC_CODE"])
-    naics_col = _find_col(result, ["NAICS", "PRIMARY_NAICS", "NAICS_CODE"])
+        print("  Loading NPDES_SICS...")
+        with zf.open("NPDES_SICS.csv") as f:
+            sics = pd.read_csv(f, dtype=str, low_memory=False)
 
-    mask = pd.Series(False, index=result.index)
-    if sic_col:
-        mask |= result[sic_col].astype(str).str.strip() == "4952"
-    if naics_col:
-        mask |= result[naics_col].astype(str).str.strip() == "221320"
+        print("  Loading ICIS_FACILITIES...")
+        with zf.open("ICIS_FACILITIES.csv") as f:
+            facilities = pd.read_csv(f, dtype=str, low_memory=False,
+                                     usecols=lambda c: c in [
+                                         "NPDES_ID", "COUNTY_CODE",
+                                         "STATE_CODE", "FACILITY_NAME",
+                                     ])
 
-    if not mask.any() and permit_df is not None and not permit_df.empty:
-        return _extract_from_permits(permit_df)
+    print(f"  Permits: {len(permits)}, SICS: {len(sics)}, Facilities: {len(facilities)}")
 
-    return result[mask].copy()
+    municipal_sics = sics[sics["SIC_CODE"].str.strip() == "4952"].copy()
+    print(f"  SIC 4952 (Sewerage) records: {len(municipal_sics)}")
 
+    municipal_ids = set(municipal_sics["NPDES_ID"].str.strip())
 
-def _extract_from_permits(permit_df: pd.DataFrame) -> pd.DataFrame:
-    """Fallback: identify municipal WWTPs from permit data."""
-    result = permit_df.copy()
-    type_col = _find_col(result, ["PERMIT_TYPE", "TYPE", "FACILITY_TYPE"])
-    if type_col:
-        mask = result[type_col].astype(str).str.contains(
-            "MUNICIPAL|POTW|SEWAGE|WWTP|WASTEWATER",
-            case=False, na=False,
-        )
-        return result[mask].copy()
-    return result
+    facilities = facilities.copy()
+    facilities["NPDES_ID"] = facilities["NPDES_ID"].str.strip()
+    muni_fac = facilities[facilities["NPDES_ID"].isin(municipal_ids)].copy()
+    print(f"  Municipal facilities matched: {len(muni_fac)}")
 
+    permits["EXTERNAL_PERMIT_NMBR"] = permits["EXTERNAL_PERMIT_NMBR"].str.strip()
+    muni_permits = permits[permits["EXTERNAL_PERMIT_NMBR"].isin(municipal_ids)].copy()
+    print(f"  Municipal permits matched: {len(muni_permits)}")
 
-def get_design_flow(wwtp_df: pd.DataFrame, permit_df: pd.DataFrame) -> pd.DataFrame:
-    """Extract design flow (MGD) for municipal WWTPs."""
-    flow_col = _find_col(permit_df, [
-        "DESIGN_FLOW", "PERMITTED_FLOW", "FLOW", "AVG_FLOW",
-        "DESIGN_FLOW_MGD", "PERMIT_FLOW",
-    ])
-    if flow_col is None:
-        return pd.DataFrame(columns=["fips", "design_flow_mgd"])
-
-    result = permit_df.copy()
-    result["design_flow_mgd"] = pd.to_numeric(
-        result[flow_col].replace("--", "").replace("", "0"),
-        errors="coerce",
+    muni_permits["design_flow"] = pd.to_numeric(
+        muni_permits["TOTAL_DESIGN_FLOW_NMBR"], errors="coerce"
+    ).fillna(0.0)
+    muni_permits["actual_flow"] = pd.to_numeric(
+        muni_permits["ACTUAL_AVERAGE_FLOW_NMBR"], errors="coerce"
     ).fillna(0.0)
 
-    fips_col = _find_col(result, ["COUNTY_FIPS", "FIPS", "COUNTY_CODE"])
-    state_col = _find_col(result, ["STATE_FIPS", "STATE", "STATE_CODE"])
+    # ponytail: EPA data has mixed units. Values > 100 are likely gal/day,
+    # not MGD. Convert them. Then cap at 2000 MGD (largest US WWTP ~1400).
+    mask_gal = muni_permits["design_flow"] > 100.0
+    muni_permits.loc[mask_gal, "design_flow"] /= 1_000_000.0
+    mask_gal_a = muni_permits["actual_flow"] > 100.0
+    muni_permits.loc[mask_gal_a, "actual_flow"] /= 1_000_000.0
+    MAX_FLOW_MGD = 2000.0
+    muni_permits["design_flow"] = muni_permits["design_flow"].clip(upper=MAX_FLOW_MGD)
+    muni_permits["actual_flow"] = muni_permits["actual_flow"].clip(upper=MAX_FLOW_MGD)
 
-    if fips_col and state_col:
-        result["fips"] = (
-            result[state_col].astype(str).str.strip().str.zfill(2)
-            + result[fips_col].astype(str).str.strip().str.zfill(3)
-        )
-    else:
-        result["fips"] = "00000"
+    muni_permits = muni_permits[muni_permits["design_flow"] > 0].copy()
 
-    result = result[result["design_flow_mgd"] > 0]
-    return result[["fips", "design_flow_mgd"]].copy()
+    # Deduplicate: multiple permits per facility. Take max flow per NPDES_ID.
+    deduped = muni_permits.groupby("EXTERNAL_PERMIT_NMBR", as_index=False).agg(
+        design_flow=("design_flow", "max"),
+        actual_flow=("actual_flow", "max"),
+    )
+    print(f"  Unique facilities with design flow > 0: {len(deduped)}")
 
+    merged = deduped.merge(
+        muni_fac[["NPDES_ID", "COUNTY_CODE", "STATE_CODE"]],
+        left_on="EXTERNAL_PERMIT_NMBR",
+        right_on="NPDES_ID",
+        how="left",
+    )
 
-def _find_col(df: pd.DataFrame, candidates: list[str]) -> str | None:
-    cols_upper = {c.upper(): c for c in df.columns}
-    for cand in candidates:
-        if cand.upper() in cols_upper:
-            return cols_upper[cand.upper()]
-    for cand in candidates:
-        for col_u, col in cols_upper.items():
-            if cand in col_u:
-                return col
-    return None
+    from popest.geo import STATE_ABBREV_TO_FIPS
+    merged["state_fips"] = merged["STATE_CODE"].str.strip().map(STATE_ABBREV_TO_FIPS)
+    county_raw = merged["COUNTY_CODE"].str.strip()
+    merged["county_fips"] = county_raw.str[-3:].str.zfill(3)
+    merged["fips"] = merged["state_fips"].fillna("") + merged["county_fips"].fillna("")
+    merged = merged[merged["fips"].str.len() == 5].copy()
+    merged = merged[~merged["fips"].str.startswith("72")].copy()
+
+    result = merged.groupby("fips", as_index=False).agg(
+        design_flow_mgd=("design_flow", "sum"),
+        actual_flow_mgd=("actual_flow", "sum"),
+        n_permits=("EXTERNAL_PERMIT_NMBR", "count"),
+    )
+    print(f"  Counties with municipal WWTP flow: {len(result)}")
+    return result

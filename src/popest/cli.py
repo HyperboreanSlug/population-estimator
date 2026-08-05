@@ -74,29 +74,14 @@ def _run_water(use_cache: bool):
 
 
 def _run_wastewater(use_cache: bool):
-    from popest.wastewater import (
-        download_npdes_part1,
-        extract_municipal_wwtps,
-        get_design_flow,
-        load_npdes_facilities,
-    )
+    from popest.wastewater import download_npdes_part1, load_municipal_flows
     from popest.methods.wastewater import estimate, national_summary
 
     print("Downloading EPA ICIS-NPDES data...")
     zip_path = download_npdes_part1(use_cache=use_cache)
 
-    print("Loading facility and permit tables...")
-    fac_df, permit_df, names = load_npdes_facilities(zip_path)
-    print(f"  Facility rows: {len(fac_df)}, Permit rows: {len(permit_df)}")
-    print(f"  Files in ZIP: {names[:10]}")
-
-    print("Filtering municipal WWTPs...")
-    wwtps = extract_municipal_wwtps(fac_df, permit_df)
-    print(f"  Municipal WWTPs found: {len(wwtps)}")
-
-    print("Extracting design flows...")
-    flow_df = get_design_flow(wwtps, permit_df)
-    print(f"  Facilities with flow data: {len(flow_df)}")
+    print("Loading and joining municipal WWTP data...")
+    flow_df = load_municipal_flows(zip_path)
 
     print("Computing wastewater population estimate...")
     result = estimate(flow_df)
