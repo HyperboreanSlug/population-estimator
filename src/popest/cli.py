@@ -12,18 +12,14 @@ def main():
     )
     sub = parser.add_subparsers(dest="command")
 
-    water_p = sub.add_parser("water", help="Run water budget method")
-    water_p.add_argument("--no-cache", action="store_true")
-
-    ww_p = sub.add_parser("wastewater", help="Run wastewater flow method")
-    ww_p.add_argument("--no-cache", action="store_true")
-
-    energy_p = sub.add_parser("energy", help="Run energy consumption method")
-
-    waste_p = sub.add_parser("waste", help="Run waste/food/vehicle methods")
-
-    run_p = sub.add_parser("run", help="Run full pipeline")
-    run_p.add_argument("--method", choices=["water", "wastewater", "energy", "waste", "all"], default="all")
+    sub.add_parser("water", help="Water budget method")
+    sub.add_parser("wastewater", help="Wastewater flow method")
+    sub.add_parser("energy", help="Energy consumption method")
+    sub.add_parser("waste", help="Waste/food/vehicle methods")
+    sub.add_parser("healthcare", help="Healthcare utilization method")
+    sub.add_parser("housing", help="Housing unit method")
+    sub.add_parser("ensemble", help="Full ensemble (all methods)")
+    sub.add_parser("sensitivity", help="Sensitivity analysis")
 
     args = parser.parse_args()
 
@@ -31,130 +27,224 @@ def main():
         parser.print_help()
         sys.exit(1)
 
-    if args.command == "water":
-        _run_water(not args.no_cache)
-    elif args.command == "wastewater":
-        _run_wastewater(not args.no_cache)
-    elif args.command == "energy":
-        _run_energy()
-    elif args.command == "waste":
-        _run_waste()
-    elif args.command == "run":
-        _run_water(True)
-        _run_energy()
-        _run_waste()
+    dispatch = {
+        "water": _run_water,
+        "wastewater": _run_wastewater,
+        "energy": _run_energy,
+        "waste": _run_waste,
+        "healthcare": _run_healthcare,
+        "housing": _run_housing,
+        "ensemble": _run_ensemble,
+        "sensitivity": _run_sensitivity,
+    }
+    dispatch[args.command]()
 
 
-def _run_water(use_cache: bool):
+def _run_water():
     from popest.water import fetch_water_use_2015
     from popest.methods.water_budget import estimate, national_summary
 
     print("Fetching USGS county water use data (2015)...")
-    raw = fetch_water_use_2015(use_cache=use_cache)
+    raw = fetch_water_use_2015()
     print(f"  Loaded {len(raw)} county records")
-
-    print("Computing water budget population estimate...")
     result = estimate(raw)
     summary = national_summary(result)
-
-    print(f"\n{'='*50}")
-    print(f"  WATER BUDGET POPULATION ESTIMATE (2015 data)")
-    print(f"{'='*50}")
-    print(f"  Counties analyzed:  {summary['counties']}")
-    print(f"  Total PS withdraw:  {summary['total_ps_mgal_d']:,.0f} Mgal/d")
-    print(f"  Total DOM withdraw: {summary['total_dom_mgal_d']:,.0f} Mgal/d")
-    print(f"  Avg USGS implied per-capita: {summary['avg_usgs_implied_gpcd']:.1f} gal/person/day")
-    print(f"")
-    print(f"  Our estimate (central):  {summary['central']:>15,.0f}")
-    print(f"  Our estimate (low):      {summary['low_pop']:>15,.0f}")
-    print(f"  Our estimate (high):     {summary['high_pop']:>15,.0f}")
-    print(f"  USGS official:           {summary['usgs_official']:>15,.0f}")
-    print(f"{'='*50}")
-
-    if summary["usgs_official"] > 0:
-        ratio = summary["central"] / summary["usgs_official"]
-        print(f"\n  Ratio (ours / USGS): {ratio:.3f}")
-
-    out_dir = Path("output")
-    out_dir.mkdir(exist_ok=True)
-    out_path = out_dir / "water_budget_2015.csv"
-    result.to_csv(out_path, index=False)
-    print(f"\n  County detail saved: {out_path}")
+    _print_header("WATER BUDGET (2015)")
+    print(f"  Counties:  {summary['counties']}")
+    print(f"  Central:   {summary['central']:>15,.0f}")
+    print(f"  Range:     {summary['low_pop']:,.0f} - {summary['high_pop']:,.0f}")
+    print(f"  USGS says: {summary['usgs_official']:>15,.0f}")
+    _save(result, "water_budget_2015.csv")
+    return summary
 
 
-def _run_wastewater(use_cache: bool):
+def _run_wastewater():
     from popest.wastewater import download_npdes_part1, load_municipal_flows
     from popest.methods.wastewater import estimate, national_summary
 
-    print("Downloading EPA ICIS-NPDES data...")
-    zip_path = download_npdes_part1(use_cache=use_cache)
-
-    print("Loading and joining municipal WWTP data...")
+    zip_path = download_npdes_part1()
     flow_df = load_municipal_flows(zip_path)
-
-    print("Computing wastewater population estimate...")
     result = estimate(flow_df)
     summary = national_summary(result)
-
-    print(f"\n{'='*50}")
-    print(f"  WASTEWATER FLOW POPULATION ESTIMATE")
-    print(f"{'='*50}")
-    print(f"  Counties:          {summary.get('counties', 0)}")
-    print(f"  Central:           {summary.get('central', 0):>15,.0f}")
-    print(f"  Low:               {summary.get('low', 0):>15,.0f}")
-    print(f"  High:              {summary.get('high', 0):>15,.0f}")
-    print(f"{'='*50}")
-
-    out_dir = Path("output")
-    out_dir.mkdir(exist_ok=True)
-    out_path = out_dir / "wastewater_flow.csv"
-    result.to_csv(out_path, index=False)
-    print(f"\n  County detail saved: {out_path}")
+    _print_header("WASTEWATER FLOW")
+    print(f"  Counties:  {summary.get('counties', 0)}")
+    print(f"  Central:   {summary.get('central', 0):>15,.0f}")
+    print(f"  Range:     {summary.get('low', 0):,.0f} - {summary.get('high', 0):,.0f}")
+    _save(result, "wastewater_flow.csv")
+    return summary
 
 
 def _run_energy():
     from popest.methods.energy import estimate, national_summary
 
-    print("Computing energy consumption population estimate...")
     result = estimate()
     summary = national_summary(result)
-
-    print(f"\n{'='*50}")
-    print(f"  ENERGY (ELECTRICITY) POPULATION ESTIMATE")
-    print(f"{'='*50}")
-    print(f"  States:            {summary.get('states', 0)}")
-    print(f"  Central:           {summary.get('central', 0):>15,.0f}")
-    print(f"  Low:               {summary.get('low', 0):>15,.0f}")
-    print(f"  High:              {summary.get('high', 0):>15,.0f}")
-    print(f"{'='*50}")
-
-    out_dir = Path("output")
-    out_dir.mkdir(exist_ok=True)
-    out_path = out_dir / "energy_electricity.csv"
-    result.to_csv(out_path, index=False)
-    print(f"\n  State detail saved: {out_path}")
+    _print_header("ENERGY (ELECTRICITY)")
+    print(f"  States:    {summary.get('states', 0)}")
+    print(f"  Central:   {summary.get('central', 0):>15,.0f}")
+    print(f"  Range:     {summary.get('low', 0):,.0f} - {summary.get('high', 0):,.0f}")
+    _save(result, "energy_electricity.csv")
+    return summary
 
 
 def _run_waste():
     from popest.methods.waste_food import estimate, summary_table
 
-    print("Computing waste/food/vehicle population estimates...")
     results = estimate()
     table = summary_table(results)
-
-    print(f"\n{'='*60}")
-    print(f"  WASTE / FOOD / VEHICLE POPULATION ESTIMATES (national)")
-    print(f"{'='*60}")
+    _print_header("WASTE / FOOD / VEHICLES")
     for _, row in table.iterrows():
-        print(f"  {row['method']:<12} central: {row['central']:>15,.0f}  "
-              f"range: {row['low']:,.0f} - {row['high']:,.0f}")
-    print(f"{'='*60}")
+        print(f"  {row['method']:<12} {row['central']:>15,.0f}  "
+              f"({row['low']:,.0f} - {row['high']:,.0f})")
+    _save(table, "waste_food_vehicle.csv")
+    return results
 
+
+def _run_healthcare():
+    from popest.methods.healthcare import estimate, summary_table
+
+    results = estimate()
+    table = summary_table(results)
+    _print_header("HEALTHCARE UTILIZATION")
+    for _, row in table.iterrows():
+        print(f"  {row['method']:<12} {row['central']:>15,.0f}  "
+              f"({row['low']:,.0f} - {row['high']:,.0f})")
+    _save(table, "healthcare.csv")
+    return results
+
+
+def _run_housing():
+    from popest.methods.housing import estimate, national_summary
+
+    result = estimate()
+    summary = national_summary(result)
+    _print_header("HOUSING UNITS")
+    print(f"  Counties:  {summary.get('counties', 0)}")
+    print(f"  Central:   {summary.get('central', 0):>15,.0f}")
+    print(f"  Range:     {summary.get('low', 0):,.0f} - {summary.get('high', 0):,.0f}")
+    _save(result, "housing.csv")
+    return summary
+
+
+def _run_ensemble():
+    from popest.ensemble import combine_national
+    from popest.discrepancy import discrepancy_report
+    from popest.census import fetch_census_population_2020
+
+    print("=" * 60)
+    print("  FULL ENSEMBLE - ALL METHODS")
+    print("=" * 60)
+
+    estimates = {}
+
+    print("\n[1/7] Water budget...")
+    try:
+        s = _run_water()
+        estimates["water"] = s["central"]
+    except Exception as e:
+        print(f"  FAILED: {e}")
+
+    print("\n[2/7] Wastewater...")
+    try:
+        s = _run_wastewater()
+        estimates["wastewater"] = s["central"]
+    except Exception as e:
+        print(f"  FAILED: {e}")
+
+    print("\n[3/7] Energy...")
+    try:
+        s = _run_energy()
+        estimates["energy"] = s["central"]
+    except Exception as e:
+        print(f"  FAILED: {e}")
+
+    print("\n[4/7] Waste/vehicles...")
+    try:
+        r = _run_waste()
+        estimates["msw"] = r.get("msw_central", 0)
+        estimates["gasoline"] = r.get("gasoline_central", 0)
+        estimates["vehicles"] = r.get("vehicles_central", 0)
+    except Exception as e:
+        print(f"  FAILED: {e}")
+
+    print("\n[5/7] Healthcare...")
+    try:
+        r = _run_healthcare()
+        estimates["healthcare"] = r.get("er_central", 0)
+    except Exception as e:
+        print(f"  FAILED: {e}")
+
+    print("\n[6/7] Housing...")
+    try:
+        s = _run_housing()
+        estimates["housing"] = s["central"]
+    except Exception as e:
+        print(f"  FAILED: {e}")
+
+    print("\n[7/7] Census (for comparison)...")
+    census_pop = 0
+    try:
+        census_df = fetch_census_population_2020()
+        census_pop = float(census_df["census_pop_2020"].sum())
+        print(f"  Census 2020: {census_pop:,.0f}")
+    except Exception as e:
+        print(f"  FAILED: {e}")
+
+    print("\n" + "=" * 60)
+    print("  ENSEMBLE RESULT")
+    print("=" * 60)
+
+    result = combine_national(estimates, census_pop)
+    print(f"\n  Combined estimate: {result['combined']:>15,.0f}")
+    if census_pop > 0:
+        ratio = result["combined"] / census_pop
+        print(f"  Census 2020:       {census_pop:>15,.0f}")
+        print(f"  Ratio to census:    {ratio:.3f}")
+
+    print(f"\n  Method contributions:")
+    for m, info in sorted(result["contributions"].items(),
+                          key=lambda x: -x[1]["value"]):
+        print(f"    {m:<12} {info['value']:>15,.0f}  (w={info['weighted_share']:.2f})")
+
+    if census_pop > 0:
+        print(f"\n  DISCREPANCY REPORT:")
+        disc = discrepancy_report(estimates, census_pop)
+        for _, row in disc.iterrows():
+            sign = "+" if row["pct_above_census"] >= 0 else ""
+            print(f"    {row['method']:<12} {row['estimate']:>13,.0f}  "
+                  f"{sign}{row['pct_above_census']:.1f}% vs census")
+        _save(disc, "discrepancy_report.csv")
+
+    return result
+
+
+def _run_sensitivity():
+    from popest.sensitivity import sensitivity_table
+
+    table = sensitivity_table()
+    _print_header("SENSITIVITY ANALYSIS")
+    print(f"  {'Parameter':<28} {'Low':>8} {'Central':>8} {'High':>8}  {'Ratio':>6}")
+    print(f"  {'-'*28} {'-'*8} {'-'*8} {'-'*8}  {'-'*6}")
+    for _, row in table.iterrows():
+        print(f"  {row['parameter']:<28} {row['low']:>8.1f} "
+              f"{row['central']:>8.1f} {row['high']:>8.1f}  "
+              f"{row['range_ratio']:>5.2f}x")
+    print(f"\n  Higher ratio = more sensitive to assumption choice.")
+    _save(table, "sensitivity.csv")
+
+
+def _print_header(title: str):
+    print(f"\n{'='*50}")
+    print(f"  {title}")
+    print(f"{'='*50}")
+
+
+def _save(df, filename: str):
     out_dir = Path("output")
     out_dir.mkdir(exist_ok=True)
-    out_path = out_dir / "waste_food_vehicle.csv"
-    table.to_csv(out_path, index=False)
-    print(f"\n  Saved: {out_path}")
+    path = out_dir / filename
+    df.to_csv(path, index=False)
+    print(f"  Saved: {path}")
 
 
 if __name__ == "__main__":
