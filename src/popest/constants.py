@@ -140,6 +140,44 @@ PUBLIC_SUPPLY_RESIDENTIAL_FRACTION = PerCapitaConstant(
     source="AWWA. Residential share of public supply deliveries.",
 )
 
+EDUCATION_ENROLLMENT_SHARE = PerCapitaConstant(
+    central=0.147,
+    low=0.140,
+    high=0.155,
+    unit="fraction of population",
+    source="NCES public K-12 enrollment as share of total population, "
+           "recent published levels (49.6M / 340M = 14.6% in 2024-25). "
+           "Census-informed denominator: administrative voice, modest weight.",
+)
+
+CWS_COVERAGE_FRACTION = PerCapitaConstant(
+    central=0.85,
+    low=0.82,
+    high=0.88,
+    unit="fraction of population",
+    source="USGS National Water Use: population served by community "
+           "water systems (~85%); remainder on domestic wells/septic.",
+)
+
+MEDICARE_AGED_SHARE = PerCapitaConstant(
+    central=0.17,
+    low=0.155,
+    high=0.185,
+    unit="fraction of population",
+    source="Population aged 65+ share. Census-informed published range; "
+           "Medicare enrollment among 65+ is ~97% (CMS).",
+)
+
+VMT_PER_PERSON = PerCapitaConstant(
+    central=9700.0,
+    low=8500.0,
+    high=11000.0,
+    unit="miles/person/year",
+    source="FHWA vehicle miles traveled per capita. Census-informed "
+           "denominator (like gasoline); behavioral voice with modest "
+           "weight. 2024 total: 3.294T miles.",
+)
+
 GAL_PER_MGAL = 1_000_000.0
 GRAMS_PER_LB = 453.592
 MGD_TO_GAL_DAY = 1_000_000.0

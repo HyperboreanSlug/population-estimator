@@ -89,3 +89,86 @@
   vitals 3,667,758 births at 11/1000 = 333,432,545; housing
   140,498,736 x 0.87 x 2.6 x 1.025 = 321,320,609; census PEP
   340,110,988 matches co-est2024-alldata.csv POPESTIMATE2024 SUMLEV 50.
+
+## User order (2026-11-18, session 3 continued)
+Review data sources; pull in every additional bulk source findable; the
+user reports multiple people claiming the true population is 450M+. The
+hypothesis space in PLAN.md explicitly includes 500M+. Method: do NOT
+tune constants toward any target; add real sources; run PLAN.md's own
+reconciliation analysis (which per-capita constants a 450M/500M figure
+would require, and whether they sit inside published ranges).
+
+## Source audit vs PLAN.md 38-source catalog (wired status)
+- Wired, real data: USGS water (1), NPDES design flow (2), EIA SEDS
+  electricity (5, now real), EPA MSW (7, page), gasoline (9), FHWA
+  vehicles (10), IRS SOI (29), BLS (32), DMR chemistry (reported), PEP
+  (27), decennial (26), SEDS natural gas (20, file parsed, unwired).
+- Wired, literature constants only: healthcare (11-14,16), grocery (18),
+  CTIA wireless (21), SNAP (25), housing units+census (28 partial).
+- Not wired with real bulk data (candidates for expansion): SDWIS
+  population served (23), school lunch/WIC (24), NCES enrollment (31),
+  CMS Medicare (30), USDA food availability (8, currently None),
+  VMT/FHWA, FCC subscriptions, TTB alcohol, CWNS facility data (3),
+  DHS/CBP flows (33/34, stock-inapplicable), VIIRS/WorldPop (35/38,
+  model-circular, validation only).
+- Voice that contradicts 450M+ hard: IRS exemptions (284.3M) would need a
+  37% non-filer rate (published 8-18%); vehicles 283.4M would need 0.63
+  per adult (published 0.75-1.0); electricity 1,483 BkWh would need
+  3,296 kWh/person (RECS-derived range 3,500-5,200). Gasoline is the
+  most compatible: 134B gal -> 298 gal/person at 450M, at the low edge
+  of the published 300-500 range.
+
+## Subagent sweep 1 (education/health/admin) 2026-11-18, verified URLs
+- NCES public K-12 2024-25: nces.ed.gov/ccd/Data/zip/ccd_sea_052_2425_l_1a_073025.zip
+  (310KB; STUDENT_COUNT; "Education Unit Total" rows sum 49,573,761
+  computed by the sweep, CA 5.81M, TX 5.55M). Digest national fall 2023:
+  49,516,361 (tabn203.10). Census circularity: enrollment-share constant
+  is census-informed; modest weight.
+- SDWIS: echo.epa.gov/files/echodownloads/SDWA_system_search_download.zip
+  (35MB, SDWA_SYSTEM_SEARCH.csv, POPULATION_SERVED_COUNT, PWS_TYPE_CODE,
+  FIPS_CODES). Full 558MB SDWA_latest_downloads.zip also exists.
+- SNAP real data: host fns.usda.gov 504s via Azure Front Door; live host
+  fna.usda.gov. snap-annualsummary-10.xlsx FY2025 avg participation
+  42,142,184 (thousands per header). Conflict: snap-4fymonthly-10.xlsx
+  FY2025 = 42,145,499 (avg of monthly). Annual summary labeled
+  "subject to revision"; both reported.
+- NSLP: 01slfypart-10.xlsx FY2025 = 29,988,041 (nine-month avg daily).
+- WIC: 37wic-monthly-10.xlsx FY2025 total = 6,867,418.
+- CMS Medicare: cms.gov NXDOMAIN on this machine's resolver; host exists
+  via public DNS (Akamai). Not bypassed; reported unavailable here.
+
+## Subagent sweep 2 (consumption/infrastructure) 2026-11-18, verified URLs
+- FHWA VMT 2024: fhwa.dot.gov/policyinformation/statistics/2024/xls/vm1.xlsx
+  (Total Rural and Urban row, ALL MOTOR VEHICLES = 3,294,031.21898
+  million miles). Bonus rows: motor vehicles registered 2024 = 297,525,836
+  (VM-1 basis; NOT substituted into the vehicles method, which calibrates
+  on MV-1), person-miles 5.18T, fuel consumed.
+- EPA LMOP measured landfill acceptance: lmopcompositedata.xlsx;
+  dedupe by Landfill ID -> 470,973,446 tons/yr over 2,233 landfills;
+  all waste streams, mixed years; reported, not weighted.
+- TTB alcohol CSVs (2025): beer removals 139,429,735; wine withdrawals
+  554,428,785; spirits bottled 523,309,665. Units NOT stated in files;
+  reported raw only, no per-capita conversion.
+- ERS nutrient availability: calorie series ENDS 2010 and is per-capita
+  (census-denominated, circular) -> food method stays unweighted/None.
+- FCC opendata: DNS-blocked locally, unverified.
+- CWNS 2022: SSO-gated, no public bulk file.
+- CMS Medicare: dataset verified public (data.csv, July 2026, TOT_BENES)
+  but cms.gov NXDOMAIN on this resolver; client wired fail-soft, no DNS
+  bypass performed on the project's own authority.
+
+## Expansion corrections (found by tests/verification, 2026-11-18)
+- SDWIS search export includes inactive/merged systems: filter
+  PWS_ACTIVITY_CODE == 'A'; CWS served drops 387.1M -> 331.9M.
+- VMT XLSX: stacked multi-row headers; ALL MOTOR VEHICLES is the last
+  numeric column of the Total row (row 26), not a header label.
+- BLS method conflated denominators: 0.595 EP ratio is against the
+  civilian 16+ population; method now uses employed/(ratio x 0.78 adult
+  share) -> 352.5M (was 275.0M).
+- Reconciliation water row: separate PS/well rows divided well withdrawals
+  by TOTAL population (invalid); replaced with the blended constant row
+  (PS 95-160, wells 65-110 at 0.85 served share -> 90.5-153.5).
+- Final expanded run: ensemble 360,979,127 (CI 338.1M-380.8M), PEP ratio
+  1.061. Reconciliation: 450M needs 12/15 constants outside published
+  ranges (water blend 92.0, vehicles 0.63/person, ww design 98.4 fit);
+  500M needs 14/15 outside (only ww design fits).

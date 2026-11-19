@@ -118,3 +118,27 @@ Complete: all phases finished. See progress.md session 3.
 | Vitals/buildings low-high spans inverted in pipeline/methods | 1 | corrected mappings |
 | Housing national fallback row (fips 00000) entered county ensemble | 1 | valid-FIPS guard in combine_county |
 | Chemistry subset numerator weighted in ensemble (dragged -28M) | 1 | reported but unweighted; documented |
+
+### Phase 14: Source expansion and reconciliation (user order 2026-11-18)
+Status: in_progress
+- [ ] Two DeepSeek-flash sweeps for bulk URLs: education/health/admin,
+      consumption/infrastructure
+- [ ] Wire new real-data methods: K-12 enrollment, Medicare enrollment,
+      SDWIS population served, SNAP real participants, food availability
+      calories, VMT, FCC subscriptions, TTB (whichever return usable
+      bulk files)
+- [ ] reconcile.py: implied per-capita constants at 340.1M / 450M / 500M
+      vs published ranges, per PLAN.md discrepancy methodology
+- [ ] EIA natural gas (NGRCP, already parsed) as a meter-count voice
+- [ ] Rerun, document, push
+
+### Phase 14 outcome (2026-11-18)
+Status: complete
+- [x] Sweeps: education/health (NCES, SDWIS, SNAP, NSLP/WIC found; CMS
+      DNS-blocked, reported) and consumption/infrastructure (VMT, LMOP,
+      TTB found; ERS circular+stale, FCC DNS-blocked, CWNS SSO-gated)
+- [x] New weighted methods: education, sdwis, vmt, snap real, medicare
+      (fail-soft); BLS denominator correction
+- [x] reconcile.py: implied constants at 340.1M/361M/400M/450M/500M
+- [x] Reported-only voices: chemistry, LMOP, TTB, NSLP/WIC, VM-1 vehicles
+- [x] 36 tests passing; README results + reconciliation section; pushed

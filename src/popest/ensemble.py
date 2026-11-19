@@ -17,6 +17,7 @@ METHOD_WEIGHTS = {
     "energy": 0.06,
     "msw": 0.05,
     "gasoline": 0.04,
+    "vmt": 0.03,
     "vehicles": 0.04,
     "healthcare": 0.06,
     "housing": 0.07,
@@ -27,6 +28,9 @@ METHOD_WEIGHTS = {
     "grocery": 0.03,
     "irs": 0.08,
     "bls": 0.05,
+    "education": 0.04,
+    "sdwis": 0.06,
+    "medicare": 0.04,
 }
 
 CENSUS_WEIGHT_CAP = 0.15

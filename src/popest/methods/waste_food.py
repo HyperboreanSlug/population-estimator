@@ -1,7 +1,8 @@
 """Method D: Waste and food population estimates.
 
 National-level estimates from MSW generation, food supply,
-gasoline consumption, and vehicle registrations.
+gasoline consumption, vehicle registrations, and vehicle miles
+traveled.
 """
 
 import pandas as pd
@@ -11,12 +12,14 @@ from popest.constants import (
     GASOLINE_USE,
     MSW_GENERATION,
     VEHICLES_PER_ADULT,
+    VMT_PER_PERSON,
 )
 from popest.waste import (
     food_availability_national,
     gasoline_consumption_national,
     msw_generation_national,
     vehicle_registrations_national,
+    vmt_annual,
 )
 
 
@@ -56,6 +59,14 @@ def estimate() -> dict:
                       ("high", VEHICLES_PER_ADULT.low)]:
         adults = total_vehicles / pc
         results[f"vehicles_{label}"] = adults / adult_share
+
+    vmt = vmt_annual()
+    if vmt and vmt.get("total_million_miles"):
+        total_miles = vmt["total_million_miles"] * 1e6
+        for label, pc in [("central", VMT_PER_PERSON.central),
+                          ("low", VMT_PER_PERSON.high),
+                          ("high", VMT_PER_PERSON.low)]:
+            results[f"vmt_{label}"] = total_miles / pc
 
     return results
 

@@ -170,35 +170,66 @@ def run(year: int = 2024, api_key: str | None = None) -> dict:
         print(f"  FAILED (decennial): {e}")
 
     # --- national-only methods ---------------------------------------
-    step("[6/12] Energy (EIA residential electricity)...")
-    _add_national(methods, "energy", _energy, "low", "high")
+    from popest import national
 
-    step("[7/12] Waste/food/vehicles...")
-    _add_national_multi(methods, _waste_food, {
-        "msw": ("msw", "inverse", "EPA MSW 2018"),
-        "gasoline": ("gasoline", "inverse", "EIA gasoline"),
-        "vehicles": ("vehicles", "inverse", "FHWA registrations 2022"),
-    })
+    step("[6/15] Energy (EIA residential electricity)...")
+    national.add_national(methods, "energy", national.energy)
 
-    step("[8/12] Healthcare utilization...")
-    _add_national(methods, "healthcare", _healthcare, "low", "high")
+    step("[7/15] Waste/food/vehicles/VMT...")
+    national.add_national_multi(methods, national.waste_food,
+                               national.NATIONAL_MULTI_SPEC)
 
-    step("[9/12] Vitals (births/deaths)...")
-    _add_national(methods, "vitals", _vitals, "low", "high")
+    step("[8/15] Healthcare utilization...")
+    national.add_national(methods, "healthcare", national.healthcare)
 
-    step("[10/12] Consumption (SNAP/wireless/grocery)...")
-    _add_national_multi(methods, _consumption, {
-        "snap": ("snap", "inverse", "USDA FNS SNAP 2023"),
-        "wireless": ("wireless", "inverse", "CTIA survey 2023"),
-        "grocery": ("grocery", "inverse", "census retail 2023"),
-    })
+    step("[9/15] Vitals (births/deaths)...")
+    national.add_national(methods, "vitals", national.vitals)
 
-    step("[11/12] IRS filers / BLS employment...")
-    _add_national(methods, "irs", _irs, "low", "high")
-    _add_national(methods, "bls", _bls, "low", "high")
+    step("[10/15] Consumption (SNAP/wireless/grocery)...")
+    national.add_national_multi(methods, national.consumption,
+                                national.CONSUMPTION_SPEC)
 
-    step("[12/12] Building footprints...")
-    _add_national(methods, "buildings", _buildings, "low", "high")
+    step("[11/15] IRS filers / BLS employment...")
+    national.add_national(methods, "irs", national.irs)
+    national.add_national(methods, "bls", national.bls)
+
+    step("[12/15] Education (NCES enrollment)...")
+    national.add_national(methods, "education", national.education)
+
+    step("[13/15] Water systems (EPA SDWIS CWS served)...")
+    national.add_national(methods, "sdwis", national.sdwis)
+
+    step("[14/15] Medicare aged beneficiaries...")
+    national.add_national(methods, "medicare", national.medicare)
+
+    step("[15/15] Building footprints...")
+    national.add_national(methods, "buildings", national.buildings)
+
+    # --- reported-only voices (never ensemble-weighted) ----------------
+    try:
+        from popest.waste import lmop_landfill_acceptance
+
+        lmop = lmop_landfill_acceptance()
+        if lmop:
+            notes.append(
+                f"LMOP measured landfill acceptance (REPORTED): "
+                f"{lmop['acceptance_tons_per_year']:,.0f} tons/yr from "
+                f"{lmop['landfills_reporting']:,} landfills; all waste "
+                f"streams, mixed years — upper bound, not MSW-only.")
+    except Exception as e:
+        print(f"  LMOP reported voice FAILED: {e}")
+    try:
+        from popest.waste import vmt_annual
+
+        vmt_r = vmt_annual()
+        if vmt_r.get("vm1_motor_vehicles_registered"):
+            notes.append(
+                f"FHWA VM-1 'motor vehicles' 2024 (REPORTED): "
+                f"{vmt_r['vm1_motor_vehicles_registered']:,.0f} — "
+                f"different count basis than the MV-1 registrations the "
+                f"vehicles method calibrates on; not substituted.")
+    except Exception as e:
+        print(f"  VM-1 vehicles reported voice FAILED: {e}")
 
     # --- combine ------------------------------------------------------
     print("\n" + "=" * 60)
@@ -230,9 +261,24 @@ def run(year: int = 2024, api_key: str | None = None) -> dict:
     states = state_rollup(county)
     print(f"  States covered: {len(states)}")
 
+    # --- reconciliation --------------------------------------------
+    print("\n" + "=" * 60)
+    print("  RECONCILIATION: implied constants per population level")
+    print("  (measured totals vs what each claim would require)")
+    print("=" * 60)
+    rec = pd.DataFrame()
+    try:
+        from popest import reconcile
+
+        rec = reconcile.run_reconciliation(census_pop, result["combined"])
+        for line in reconcile.summarize(rec):
+            print(f"  {line}")
+    except Exception as e:
+        print(f"  FAILED: {e}")
+
     # --- outputs -------------------------------------------------------
     paths = _write_outputs(county, names, states, result, boot, census_pop,
-                           methods, notes, decennial_2020, chem_summary)
+                           methods, notes, decennial_2020, chem_summary, rec)
     print("\n  Outputs:")
     for p in paths:
         print(f"    {p}")
@@ -243,115 +289,15 @@ def run(year: int = 2024, api_key: str | None = None) -> dict:
     }
 
 
-def _add_national(methods: dict, name: str, fn, low_key: str, high_key: str) -> None:
-    try:
-        entry = fn()
-        if entry and entry.get("central", 0) > 0:
-            methods[name] = entry
-            print(f"  central {entry['central']:,.0f}")
-        else:
-            print(f"  no data ({name})")
-    except Exception as e:
-        print(f"  FAILED: {e}")
-
-
-def _add_national_multi(methods: dict, fn, spec: dict) -> None:
-    try:
-        results = fn()
-        for name, (key, form, source) in spec.items():
-            central = results.get(f"{key}_central", 0)
-            if central > 0:
-                methods[name] = {
-                    "central": central,
-                    "low": results.get(f"{key}_low", central),
-                    "high": results.get(f"{key}_high", central),
-                    "form": form, "source": source,
-                }
-                print(f"  {name}: {central:,.0f}")
-            else:
-                print(f"  no data ({name})")
-    except Exception as e:
-        print(f"  FAILED: {e}")
-
-
-def _energy() -> dict:
-    from popest.methods.energy import estimate, national_summary
-
-    s = national_summary(estimate())
-    if not s or s.get("central", 0) <= 0:
-        return {}
-    return {"central": s["central"], "low": s["low"], "high": s["high"],
-            "form": "inverse", "source": "EIA SEDS residential kWh 2022"}
-
-
-def _waste_food() -> dict:
-    from popest.methods.waste_food import estimate
-
-    return estimate()
-
-
-def _healthcare() -> dict:
-    from popest.methods.healthcare import estimate
-
-    r = estimate()
-    return {"central": r["er_central"], "low": r["er_low"],
-            "high": r["er_high"], "form": "inverse",
-            "source": "CDC NCHS ER visits 2021"}
-
-
-def _vitals() -> dict:
-    from popest.methods.vitals import estimate
-
-    r = estimate()
-    return {"central": r["births_central"], "low": r["births_low"],
-            "high": r["births_high"], "form": "inverse",
-            "source": "CDC NCHS births 2022"}
-
-
-def _consumption() -> dict:
-    from popest.consumption import estimate_consumption
-
-    return estimate_consumption()
-
-
-def _irs() -> dict:
-    from popest.irs import estimate_from_irs
-
-    r = estimate_from_irs()
-    if "error" in r:
-        raise RuntimeError(r["error"])
-    return {"central": r["irs_central"], "low": r["irs_high"],
-            "high": r["irs_low"], "form": "inverse",
-            "source": "IRS SOI exemptions TY2022"}
-
-
-def _bls() -> dict:
-    from popest.bls import estimate_from_bls
-
-    r = estimate_from_bls()
-    if "error" in r:
-        raise RuntimeError(r["error"])
-    return {"central": r["bls_central"], "low": r["bls_low"],
-            "high": r["bls_high"], "form": "inverse",
-            "source": "BLS employment (API)"}
-
-
-def _buildings() -> dict:
-    from popest.buildings import estimate_from_buildings
-
-    r = estimate_from_buildings()
-    return {"central": r["buildings_central"], "low": r["buildings_low"],
-            "high": r["buildings_high"], "form": "direct",
-            "source": "MS building footprints (5 states verified)"}
-
-
 def _write_outputs(county, names, states, result, boot, census_pop,
                    methods, notes, decennial_2020=0.0,
-                   chem_summary=None) -> list:
+                   chem_summary=None, reconciliation=None) -> list:
     paths = [
         report.write_counties(county, names),
         report.write_states(states),
     ]
+    if reconciliation is not None and not reconciliation.empty:
+        paths.append(report.write_reconciliation(reconciliation))
 
     national_rows = [{
         "metric": "ensemble_combined", "value": result["combined"],

@@ -62,6 +62,12 @@ def write_discrepancy(disc: pd.DataFrame) -> Path:
     return path
 
 
+def write_reconciliation(rec: pd.DataFrame) -> Path:
+    path = _ensure_dir() / "reconciliation.csv"
+    rec.to_csv(path, index=False)
+    return path
+
+
 def write_summary(lines: list[str]) -> Path:
     path = _ensure_dir() / "summary.txt"
     path.write_text("\n".join(lines) + "\n")

@@ -18,9 +18,12 @@ year; the target year labels the run.
 | `water.py` | County-level water withdrawals | USGS ScienceBase 2015 |
 | `wastewater.py` | Municipal WWTP design flows | EPA ICIS-NPDES zip (332 MB) |
 | `dmr.py` | Per-facility BOD/TSS/N loads, county crosswalk, municipal SIC filter | EPA DMR FY2024 zip (612 MB) + ICIS_FACILITIES |
-| `sources.py` | Canonical manifest downloader (core + tiers 1-5) | all URLs from former download_* scripts |
+| `sdwis.py` | Community water system population served (active CWS) | EPA SDWA system search zip (35 MB) |
+| `education.py` | Public K-12 enrollment, NSLP, WIC | NCES CCD 2024-25 zip; USDA FNS XLSX |
+| `medicare.py` | Aged Medicare beneficiaries | data.cms.gov public CSV (DNS-blocked on some resolvers) |
+| `sources.py` | Canonical manifest downloader (core + tiers 1-5) | all URLs from former download_* scripts and subagent sweeps |
 | `energy.py` | State residential electricity (ESRCP) and natural gas (NGRCP) | EIA SEDS Complete_SEDS.csv, Vintage 2024F |
-| `waste.py` | MSW, gasoline, vehicles | EPA HTML / EIA CSV / FHWA |
+| `waste.py` | MSW, gasoline, VMT (FHWA VM-1), LMOP landfill acceptance, vehicles | EPA HTML / EIA CSV / FHWA XLSX |
 | `healthcare.py` | ER visits, physician visits, discharges | CDC NCHS/AHRQ published totals |
 | `census.py` | County PEP comparison + 2020 PL population/housing | PEP Vintage 2024 bulk CSV (no key); PL via key or national fallback |
 | `vitals.py` | Births/deaths | CDC WONDER attempt, NCHS fallback |
@@ -39,11 +42,14 @@ year; the target year labels the run.
 | `methods/wastewater.py` | B1: WWTP design flow | County |
 | `methods/wastewater_chemistry.py` | B2: Monitored BOD loads (DMR) | County |
 | `methods/energy.py` | C: Residential electricity | State |
-| `methods/waste_food.py` | D: MSW/gasoline/vehicles | National |
+| `methods/waste_food.py` | D: MSW/gasoline/vehicles/VMT | National |
 | `methods/healthcare.py` | E: Healthcare utilization | National |
 | `methods/housing.py` | G: Housing units | County |
 | `methods/vitals.py` | Births/deaths rates | National |
 | `methods/buildings.py` | Building count x occupancy | National |
+| `methods/education.py` | K-12 enrollment share | National |
+| `methods/sdwis.py` | CWS served / coverage fraction | National |
+| `methods/medicare.py` | Aged beneficiaries / aged share | National |
 
 ### Combination and Output
 
@@ -51,9 +57,11 @@ year; the target year labels the run.
 |--------|----------|
 | `ensemble.py` | National weighted combine (census capped 15%), county ensemble with contributions, state rollup |
 | `uncertainty.py` | Bootstrap 90% CI: per-capita constants resampled in published ranges |
+| `reconcile.py` | Implied constants at claimed population levels vs published ranges |
 | `pipeline.py` | `popest run`: all methods fail-soft, combine, write outputs |
+| `national.py` | National-only method collectors |
 | `runners.py` | Single-method CLI commands |
-| `report.py` | Output writers (counties/states/national/discrepancy/summary) |
+| `report.py` | Output writers (counties/states/national/discrepancy/reconciliation/summary) |
 | `discrepancy.py` | Per-method gap vs census |
 | `sensitivity.py` | Per-capita constant sensitivity table |
 | `constants.py` | All per-capita rates with uncertainty ranges |
@@ -107,6 +115,7 @@ Written to `output/` by `popest run`:
 - `states.csv` — state rollup of covered counties
 - `national.csv` — ensemble, bootstrap 90% CI, census comparison
 - `discrepancy_report.csv` — every method vs census
+- `reconciliation.csv` — implied constants at each claimed population
 - `summary.txt` — human-readable report
 
 Single-method commands save per-method CSVs (`water_budget_2015.csv`,

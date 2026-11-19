@@ -58,8 +58,11 @@ def estimate_from_irs() -> dict:
     exemptions = soi["total_exemptions"]
     results = {}
 
-    # Non-filer adjustment: estimated 8-18% of population doesn't file
-    for label, nonfiler_rate in [("central", 0.12), ("low", 0.18), ("high", 0.08)]:
+    # Non-filer adjustment: estimated 8-18% of population doesn't file.
+    # A HIGHER non-filer rate implies MORE people behind the same
+    # exemptions, so the low population uses the low rate.
+    for label, nonfiler_rate in [("central", 0.12), ("low", 0.08),
+                                 ("high", 0.18)]:
         results[f"irs_{label}"] = exemptions / (1.0 - nonfiler_rate)
 
     results["source"] = soi["source"]

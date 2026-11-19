@@ -48,8 +48,9 @@ def load_bls_data() -> dict:
 def estimate_from_bls() -> dict:
     """Population estimate from BLS employment data.
 
-    P = Total_Employed / Employment_Rate
-    Employment-population ratio ~59-60% (from downloaded BLS data).
+    adults_civilian = employed / EP_ratio (BLS employment-population
+    ratio is against the CIVILIAN NONINSTITUTIONAL 16+ population,
+    ~59-60% of that group), then total = adults / adult_share.
     """
     bls = load_bls_data()
     if not bls.get("total_employed_thousands"):
@@ -57,16 +58,18 @@ def estimate_from_bls() -> dict:
 
     employed_k = bls["total_employed_thousands"][0]["value"]
     employed = employed_k * 1000
+    adult_share = 0.78  # share of total population aged 16+
 
     results = {}
-    # APPROXIMATED: employment-population ratio range from BLS historical data
-    for label, emp_rate in [("central", 0.595), ("low", 0.62), ("high", 0.57)]:
-        results[f"bls_{label}"] = employed / emp_rate
+    # APPROXIMATED: EP ratio range from BLS historical data; adult share
+    # is a published demographic share. low pop = high ratio.
+    for label, rate in [("central", 0.595), ("low", 0.62), ("high", 0.57)]:
+        results[f"bls_{label}"] = employed / (rate * adult_share)
 
     results["source"] = bls["source"]
     results["employed"] = employed
     results["disclaimer"] = (
-        "APPROXIMATED: employment-population ratio (0.57-0.62) is an estimate. "
-        "Employed count is real from BLS API."
-    )
+        "APPROXIMATED: employment-population ratio (0.57-0.62, against "
+        "the civilian 16+ population) and adult share 0.78 are published "
+        "demographic constants. Employed count is real from BLS API.")
     return results

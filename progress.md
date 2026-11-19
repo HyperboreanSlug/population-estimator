@@ -30,3 +30,9 @@
   (3,159 counties, contributions sum 1.0, states rollup equals county
   sum). Ensemble 358,571,850 (CI 331.6M-382.6M), ratio 1.054 vs PEP.
 - README results + method-status table written; docs updated; pushed.
+- Phase 14: two verified DeepSeek-flash sweeps; wired education (NCES),
+  sdwis (active CWS 331.9M served), VMT (FHWA 2024), real SNAP FY2025,
+  medicare (fail-soft, DNS), LMOP/TTB/NSLP/WIC/VM-1-vehicles reported
+  voices; BLS denominator fix; reconcile.py with 15-16 constant rows.
+- 36 tests passing. Ensemble 360,979,127 (CI 338.1-380.8M), ratio 1.061
+  vs PEP 2024. 450M claim: 12/15 constants break; 500M: 14/15.
