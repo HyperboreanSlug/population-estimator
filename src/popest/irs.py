@@ -19,7 +19,7 @@ def load_soi_summary() -> dict:
     Downloaded from: https://www.irs.gov/pub/irs-soi/22zpallagi.csv
     """
     if not SOI_FILE.exists():
-        return {"error": "SOI file not downloaded. Run: python -m popest.download_comprehensive"}
+        return {"error": "SOI file not downloaded. Run: popest download"}
 
     df = pd.read_csv(SOI_FILE, usecols=["STATEFIPS", "zipcode", "N1", "N2"])
     total_returns = int(df["N1"].sum())

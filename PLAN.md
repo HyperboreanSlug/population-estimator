@@ -290,40 +290,51 @@ population-estimator/
 ├── SOURCE.md
 ├── pyproject.toml
 ├── .gitignore
-├── config/
-│   └── sources.yaml
 ├── src/
 │   └── popest/
 │       ├── __init__.py
-│       ├── cli.py
+│       ├── cli.py              # entry point, subcommand dispatch
+│       ├── runners.py          # single-method CLI commands
+│       ├── pipeline.py          # `popest run` orchestration
+│       ├── report.py           # output generation
 │       ├── config.py
-│       ├── geo.py              # FIPS, crosswalks
+│       ├── geo.py              # FIPS codes, state mappings
 │       ├── constants.py        # Per-capita rates with uncertainty
-│       ├── water.py            # USGS withdrawals, EPA wastewater
+│       ├── water.py            # USGS withdrawals
+│       ├── wastewater.py       # EPA NPDES design flows
+│       ├── dmr.py              # EPA DMR pollutant loads
 │       ├── energy.py           # EIA electricity, gas
-│       ├── waste.py            # EPA MSW, USDA food
-│       ├── healthcare.py       # CDC NCHS, AHRQ utilization
-│       ├── consumption.py      # SNAP, retail, vehicles
-│       ├── census.py           # Census/ACS/PEP (low weight)
-│       ├── geospatial.py       # VIIRS, building footprints
-│       ├── methods/
-│       │   ├── __init__.py
-│       │   ├── water_budget.py     # Method A
-│       │   ├── wastewater.py       # Method B
-│       │   ├── energy.py           # Method C
-│       │   ├── waste_food.py       # Method D
-│       │   ├── healthcare.py       # Method E
-│       │   ├── census_components.py # Method F
-│       │   └── housing_vehicles.py  # Method G
-│       ├── ensemble.py         # Weighted combination, reconciliation
+│       ├── waste.py            # EPA MSW, EIA gasoline, FHWA
+│       ├── healthcare.py       # CDC NCHS / AHRQ utilization
+│       ├── consumption.py     # SNAP, retail, vehicles
+│       ├── census.py           # Census 2020 PL + PEP (low weight)
+│       ├── buildings.py        # MS footprints (cached counts)
+│       ├── vitals.py           # CDC WONDER births/deaths
+│       ├── irs.py              # IRS SOI filers
+│       ├── bls.py              # BLS employment
+│       ├── sources.py          # canonical manifest downloader
+│       ├── real_data.py        # `popest status` report
+│       ├── verify_downloads.py # `popest verify`
+│       ├── ensemble.py         # Weighted combination, county + national
+│       ├── uncertainty.py      # Bootstrap over per-capita constants
 │       ├── discrepancy.py      # Gap analysis between methods
-│       └── report.py           # Output generation
+│       └── methods/
+│           ├── __init__.py
+│           ├── water_budget.py          # Method A
+│           ├── wastewater.py            # Method B1: design flow
+│           ├── wastewater_chemistry.py   # Method B2: DMR loads
+│           ├── energy.py                # Method C
+│           ├── waste_food.py            # Method D
+│           ├── healthcare.py           # Method E
+│           ├── housing.py              # Method G
+│           ├── vitals.py
+│           └── buildings.py
+├── tests/
+│   ├── test_methods.py
+│   ├── test_ensemble.py
+│   └── test_helpers.py
 ├── data/                       # Raw downloads (gitignored)
-├── output/                     # Final estimates (gitignored)
-└── tests/
-    ├── test_water.py
-    ├── test_wastewater.py
-    └── test_ensemble.py
+└── output/                     # Final estimates (gitignored)
 ```
 
 ---

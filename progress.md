@@ -18,3 +18,9 @@
 - All 7 phases complete
 - SOURCE.md written
 - All code committed and pushed
+
+## Session 3 — 2026-11-18
+- Audited repo: phases 1-7 done, but README `popest run` missing, ensemble
+  national-only, Method B unintegrated, download sprawl (20 scripts), no
+  tests, heavy unused deps.
+- Completion plan written (phases 8-13).

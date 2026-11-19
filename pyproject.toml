@@ -7,9 +7,18 @@ dependencies = [
     "requests>=2.31",
     "pandas>=2.1",
     "numpy>=1.26",
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+# Geospatial clients (VIIRS/WorldPop rasters) are optional; the building
+# footprints method runs on cached counts and needs none of these.
+geo = [
     "geopandas>=0.14",
     "rasterio>=1.3",
-    "pyyaml>=6.0",
+]
+dev = [
+    "pytest>=8.0",
 ]
 
 [project.scripts]

@@ -84,7 +84,7 @@ def load_municipal_flows(zip_path: Path) -> pd.DataFrame:
         muni_permits["ACTUAL_AVERAGE_FLOW_NMBR"], errors="coerce"
     ).fillna(0.0)
 
-    # ponytail: EPA data has mixed units. Values > 100 are likely gal/day,
+    # EPA data has mixed units. Values > 100 are likely gal/day,
     # not MGD. Convert them. Then cap at 2000 MGD (largest US WWTP ~1400).
     mask_gal = muni_permits["design_flow"] > 100.0
     muni_permits.loc[mask_gal, "design_flow"] /= 1_000_000.0

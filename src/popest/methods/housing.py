@@ -5,7 +5,7 @@ P = Housing_Units × Occupancy_Rate × Persons_per_Household + Group_Quarters
 
 import pandas as pd
 
-from popest.census import fetch_census_housing_2020, fetch_census_population_2020
+from popest.census import fetch_census_housing_2020
 
 OCCUPANCY_RATE = 0.87
 PERSONS_PER_HOUSEHOLD = 2.6

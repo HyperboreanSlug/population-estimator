@@ -1,16 +1,20 @@
-"""Phase 6: Ensemble combination of all methods.
+"""Ensemble combination of all methods.
 
-Precision-weighted combination with census capped at 15%.
-Physical/biological methods get 85% of weight.
+National: precision-style fixed weights (physical/biological methods get
+the bulk; census is capped). County: available-method weighted mean with
+per-county contributions and range endpoints. State: county rollup.
+
+The census cap follows PLAN.md: census is one input, never the anchor,
+capped at 15% of ensemble weight regardless of its internal precision.
 """
 
 import numpy as np
 import pandas as pd
 
-
 METHOD_WEIGHTS = {
-    "water": 0.16,
-    "wastewater": 0.13,
+    "water": 0.15,
+    "wastewater": 0.12,
+    "wastewater_chem": 0.10,
     "energy": 0.06,
     "msw": 0.05,
     "gasoline": 0.04,
@@ -18,7 +22,7 @@ METHOD_WEIGHTS = {
     "healthcare": 0.06,
     "housing": 0.07,
     "vitals": 0.05,
-    "buildings": 0.07,
+    "buildings": 0.06,
     "snap": 0.03,
     "wireless": 0.03,
     "grocery": 0.03,
@@ -28,16 +32,18 @@ METHOD_WEIGHTS = {
 
 CENSUS_WEIGHT_CAP = 0.15
 
+COUNTY_WEIGHTS = {
+    "water": 0.30,
+    "wastewater": 0.20,
+    "wastewater_chem": 0.15,
+    "housing": 0.20,
+    "census": 0.15,
+}
 
-def combine_national(estimates: dict[str, float], census: float | None = None) -> dict:
-    """Combine national-level estimates from all methods.
 
-    Args:
-        estimates: dict mapping method name -> central estimate
-        census: census official count (capped at 15% weight)
-
-    Returns dict with combined estimate and metadata.
-    """
+def combine_national(estimates: dict[str, float],
+                     census: float | None = None) -> dict:
+    """Weighted national combination with the census weight cap."""
     weighted_sum = 0.0
     total_weight = 0.0
     contributions = {}
@@ -51,19 +57,19 @@ def combine_national(estimates: dict[str, float], census: float | None = None) -
         contributions[method] = {"value": value, "weight": w}
 
     if census and census > 0:
-        census_w = min(CENSUS_WEIGHT_CAP, 1.0 - total_weight) if total_weight < 1.0 else CENSUS_WEIGHT_CAP
+        census_w = (min(CENSUS_WEIGHT_CAP, 1.0 - total_weight)
+                    if total_weight < 1.0 else CENSUS_WEIGHT_CAP)
         weighted_sum += census * census_w
         total_weight += census_w
         contributions["census"] = {"value": census, "weight": census_w}
 
     if total_weight == 0:
-        return {"combined": 0, "contributions": {}}
+        return {"combined": 0.0, "total_weight": 0.0, "contributions": {}}
 
     combined = weighted_sum / total_weight
-
     for m in contributions:
-        contributions[m]["weighted_share"] = contributions[m]["weight"] / total_weight
-
+        contributions[m]["weighted_share"] = (
+            contributions[m]["weight"] / total_weight)
     return {
         "combined": combined,
         "total_weight": total_weight,
@@ -71,29 +77,39 @@ def combine_national(estimates: dict[str, float], census: float | None = None) -
     }
 
 
-def combine_county(
-    water_df: pd.DataFrame | None,
-    wastewater_df: pd.DataFrame | None,
-    housing_df: pd.DataFrame | None,
-    census_df: pd.DataFrame | None,
-) -> pd.DataFrame:
-    """Combine county-level estimates into final ensemble.
+def combine_county(method_dfs: dict[str, pd.DataFrame],
+                   census_df: pd.DataFrame | None = None) -> pd.DataFrame:
+    """County-level ensemble across available methods.
 
-    Merges all county-level methods and produces weighted average.
+    Args:
+        method_dfs: method name -> DataFrame with columns
+            [fips, <central>, <low>, <high>] where the three value
+            columns are named pop_<method>_{central,low,high}.
+        census_df: DataFrame [fips, census_pop_2020] (comparison input,
+            capped weight).
+
+    Returns DataFrame indexed by fips with per-method populations, the
+    weighted ensemble with renormalization over present methods, range
+    endpoints, and per-method weighted-share contributions. Counties
+    with no method data keep an estimate of 0 and n_methods 0 (never
+    invented).
     """
     frames = []
-    if water_df is not None and not water_df.empty:
-        frames.append(water_df[["fips", "pop_water_central"]].rename(
-            columns={"pop_water_central": "water"}))
-    if wastewater_df is not None and not wastewater_df.empty:
-        frames.append(wastewater_df[["fips", "pop_ww_central"]].rename(
-            columns={"pop_ww_central": "wastewater"}))
-    if housing_df is not None and not housing_df.empty:
-        frames.append(housing_df[["fips", "pop_housing_central"]].rename(
-            columns={"pop_housing_central": "housing"}))
+    for name, df in method_dfs.items():
+        if df is None or df.empty:
+            continue
+        keep = df[[c for c in ["fips", f"pop_{name}_central",
+                               f"pop_{name}_low", f"pop_{name}_high"]
+                   if c in df.columns]].copy()
+        frames.append(keep)
     if census_df is not None and not census_df.empty:
-        frames.append(census_df[["fips", "census_pop_2020"]].rename(
-            columns={"census_pop_2020": "census"}))
+        census_df = census_df.copy()
+        census_df["pop_census_high"] = census_df["census_pop"]
+        census_df["pop_census_low"] = census_df["census_pop"]
+        census_df = census_df.rename(
+            columns={"census_pop": "pop_census_central"})
+        frames.append(census_df[["fips", "pop_census_central",
+                                 "pop_census_low", "pop_census_high"]])
 
     if not frames:
         return pd.DataFrame(columns=["fips", "ensemble_pop"])
@@ -102,21 +118,52 @@ def combine_county(
     for f in frames[1:]:
         merged = merged.merge(f, on="fips", how="outer")
 
-    weights = {"water": 0.30, "wastewater": 0.25, "housing": 0.30, "census": 0.15}
-
+    methods = [m for m in COUNTY_WEIGHTS
+               if f"pop_{m}_central" in merged.columns]
     merged["ensemble_pop"] = 0.0
+    merged["ensemble_low"] = 0.0
+    merged["ensemble_high"] = 0.0
+    merged["n_methods"] = 0
     merged["total_w"] = 0.0
-    for method, w in weights.items():
-        if method in merged.columns:
-            vals = merged[method].fillna(0)
-            has_data = merged[method].notna() & (merged[method] > 0)
-            merged["ensemble_pop"] += vals * w * has_data
-            merged["total_w"] += w * has_data
+    for m in methods:
+        central = merged[f"pop_{m}_central"].fillna(0.0)
+        low = merged[f"pop_{m}_low"].fillna(0.0)
+        high = merged[f"pop_{m}_high"].fillna(0.0)
+        has = merged[f"pop_{m}_central"].notna() & (central > 0)
+        w = COUNTY_WEIGHTS[m]
+        merged["ensemble_pop"] += central * w * has
+        merged["ensemble_low"] += low * w * has
+        merged["ensemble_high"] += high * w * has
+        merged["n_methods"] += has.astype(int)
+        merged["total_w"] += w * has
 
-    merged["ensemble_pop"] = np.where(
-        merged["total_w"] > 0,
-        merged["ensemble_pop"] / merged["total_w"],
-        0.0,
+    # contributions are shares of the FINAL weight total, so they sum
+    # to 1 wherever at least one method is present
+    for m in methods:
+        central = merged[f"pop_{m}_central"].fillna(0.0)
+        has = merged[f"pop_{m}_central"].notna() & (central > 0)
+        w = COUNTY_WEIGHTS[m]
+        merged[f"contrib_{m}"] = np.where(
+            merged["total_w"] > 0, w * has / merged["total_w"], 0.0)
+
+    valid = merged["total_w"] > 0
+    for col in ["ensemble_pop", "ensemble_low", "ensemble_high"]:
+        merged[col] = np.where(valid, merged[col] / merged["total_w"], 0.0)
+
+    return merged
+
+
+def state_rollup(county_df: pd.DataFrame) -> pd.DataFrame:
+    """Sum county ensemble values to state totals with coverage counts."""
+    if county_df.empty or "fips" not in county_df.columns:
+        return pd.DataFrame()
+    work = county_df.copy()
+    work["state_fips"] = work["fips"].astype(str).str.zfill(5).str[:2]
+    has_data = work["n_methods"] > 0
+    grouped = work[has_data].groupby("state_fips", as_index=False).agg(
+        ensemble_pop=("ensemble_pop", "sum"),
+        ensemble_low=("ensemble_low", "sum"),
+        ensemble_high=("ensemble_high", "sum"),
+        counties_covered=("fips", "count"),
     )
-
-    return merged[["fips", "ensemble_pop"]].copy()
+    return grouped

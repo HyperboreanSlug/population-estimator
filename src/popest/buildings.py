@@ -2,7 +2,11 @@
 
 Uses REAL downloaded GeoJSON data from data/buildings/*.geojson.zip.
 Source: https://github.com/microsoft/USBuildingFootprints
-Downloaded states: CA, TX, FL, NY, PA (39.4M buildings counted).
+
+Counts below were verified by scanning the downloaded state archives
+(reproduce with count_features()); only 5 states were downloaded, the
+national total comes from the upstream repo docs and is marked
+APPROXIMATED.
 """
 
 import zipfile
@@ -26,6 +30,32 @@ REAL_COUNTS = {
 # Source: data/buildings/ms_repo_page.html
 # APPROXIMATED: only 5 states downloaded locally; national total from repo docs
 TOTAL_US_BUILDINGS = 128_500_000
+
+
+def count_features() -> dict:
+    """Recount building features in each downloaded state GeoJSON zip.
+
+    Scans data/buildings/*.geojson.zip and counts "type": "Feature"
+    occurrences in 1 MB chunks. Returns {state: count}.
+    """
+    results = {}
+    for zf_path in sorted(DATA_DIR.glob("*.geojson.zip")):
+        state = zf_path.stem.replace(".geojson", "")
+        count = 0
+        with zipfile.ZipFile(zf_path) as zf:
+            with zf.open(zf.namelist()[0]) as f:
+                buffer = b""
+                while True:
+                    chunk = f.read(1024 * 1024)
+                    if not chunk:
+                        break
+                    buffer += chunk
+                    count += buffer.count(b'"type": "Feature"')
+                    count += buffer.count(b'"type":"Feature"')
+                    buffer = buffer[-50:]
+        results[state] = count
+        print(f"  {state}: {count:,} buildings")
+    return results
 
 
 def get_building_counts() -> dict:
