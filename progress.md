@@ -40,3 +40,7 @@
   ssh), dlgate PASS, parse fixed for month names; ensemble 361.8M.
   FCC: no subscriptions dataset exists on opendata (verified through
   the same tunnel); CTIA constant documented as the only source.
+- Phase 15 complete: 27 national voices + 4 county voices, 28 core
+  files. Ensemble 356,412,430 (CI 338.3M-370.3M), ratio 1.048.
+  Reconciliation: 27 constants; 450M breaks 21, 500M breaks 25. All
+  committed and pushed.

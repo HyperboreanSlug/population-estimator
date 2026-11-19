@@ -19,8 +19,10 @@ year; the target year labels the run.
 | `wastewater.py` | Municipal WWTP design flows | EPA ICIS-NPDES zip (332 MB) |
 | `dmr.py` | Per-facility BOD/TSS/N loads, county crosswalk, municipal SIC filter | EPA DMR FY2024 zip (612 MB) + ICIS_FACILITIES |
 | `sdwis.py` | Community water system population served (active CWS) | EPA SDWA system search zip (35 MB) |
-| `education.py` | Public K-12 enrollment, NSLP, WIC | NCES CCD 2024-25 zip; USDA FNS XLSX |
-| `medicare.py` | Aged Medicare beneficiaries | data.cms.gov public CSV (local DNS blocks cms.gov; fetch via authorized SSH proxy or `POP_EST_SOCKS_PROXY`) |
+| `meters.py` | Residential electricity meters (Bundled+Delivery) and gas customers | EIA-861 zip, EIA dnav xls |
+| `travel.py` | FAA enplanements, NTD transit trips, IMLS library survey | FAA xlsx, data.transportation.gov, IMLS zip |
+| `education.py` | Public K-12 enrollment, higher-ed enrollment, NSLP, WIC | NCES CCD zip + Digest 303.10; USDA FNS XLSX |
+| `medicare.py` | Aged Medicare beneficiaries, national and by county | data.cms.gov public CSV (local DNS blocks cms.gov; fetch via authorized SSH proxy or `POP_EST_SOCKS_PROXY`) |
 | `sources.py` | Canonical manifest downloader (core + tiers 1-5) | all URLs from former download_* scripts and subagent sweeps |
 | `energy.py` | State residential electricity (ESRCP) and natural gas (NGRCP) | EIA SEDS Complete_SEDS.csv, Vintage 2024F |
 | `waste.py` | MSW, gasoline, VMT (FHWA VM-1), LMOP landfill acceptance, vehicles | EPA HTML / EIA CSV / FHWA XLSX |

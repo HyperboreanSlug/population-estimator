@@ -156,3 +156,21 @@ Status: in_progress
       per PLAN.md); WONDER superseded by PEP NCHS-derived columns
 - [ ] Rebalance ensemble + county weights; extend reconciliation rows
 - [ ] Tests, full run, docs, push
+
+### Phase 15 outcome (2026-11-19)
+Status: complete
+- [x] On-disk five wired: PEP births/deaths, IRS AGI, total energy, gas
+      volume, Medicare county (3,196 counties, county ensemble weight
+      0.25)
+- [x] Sweep verified 7 of 11 new sources; wired: EIA-861 meters
+      (Bundled+Delivery 143.1M; Energy rows double-count, caught by
+      CA check), gas customers 73.7M, FAA enplanements 973M, NTD
+      trips 7.67B (Socrata pagination fixed), IPEDS 19.04M, ERS food
+      $2.51T, IMLS visits 803M
+- [x] Blocked with reasons documented: SSA (403), USFWS (530), HUD
+      (registration), BEA (app shell), TSA (HTML-only), GHSL
+      (satellite, census-trained, validation-only per PLAN.md),
+      WONDER (superseded by PEP NCHS columns)
+- [x] Reconciliation 27 constants: 450M breaks 21/27, 500M 25/27
+- [x] Ensemble 356,412,430 (CI 338.3M-370.3M), ratio 1.048; 41 tests;
+      README/SOURCE/findings updated; pushed

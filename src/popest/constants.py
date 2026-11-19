@@ -183,9 +183,10 @@ IRS_AGI_PER_CAPITA = PerCapitaConstant(
     low=38000.0,
     high=52000.0,
     unit="dollars/person/year",
-    source="IRS SOI total AGI / population (~$14.8T / 333M in 2022). "
-           "Census-informed denominator; behavioral-administrative voice "
-           "with modest weight.",
+    source="IRS SOI total AGI ($14.61T TY2022, file A02650) / population "
+           "(~43,740 at PEP 2022; central set slightly above as a "
+           "calibration knob). Census-informed denominator; "
+           "administrative voice with modest weight.",
 )
 
 TOTAL_ENERGY_PER_CAPITA = PerCapitaConstant(
