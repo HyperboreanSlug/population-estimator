@@ -18,6 +18,7 @@ from pathlib import Path
 import pandas as pd
 
 SEDS_COMPLETE = Path("data/eia/Complete_SEDS.csv")
+TOTAL_ENERGY_CSV = Path("data/eia/total_energy_monthly.csv")
 
 ELEC_SERIES = "ESRCP"
 GAS_SERIES = "NGRCP"
@@ -31,7 +32,7 @@ def total_primary_energy() -> dict:
     Source: data/eia/total_energy_monthly.csv (EIA MER Table 1.1).
     Annual rows have YYYYMM ending in 13.
     """
-    path = Path("data/eia/total_energy_monthly.csv")
+    path = TOTAL_ENERGY_CSV
     if not path.exists():
         return {}
     df = pd.read_csv(path, dtype={"YYYYMM": str})
