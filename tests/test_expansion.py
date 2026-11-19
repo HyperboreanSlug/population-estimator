@@ -11,6 +11,7 @@ import pytest
 
 from popest import education as education_mod
 from popest import consumption as consumption_mod
+from popest import medicare as medicare_mod
 from popest import reconcile as reconcile_mod
 from popest import sdwis as sdwis_mod
 from popest import waste as waste_mod
@@ -150,6 +151,37 @@ def test_vmt_parse(tmp_path, monkeypatch):
     assert vmt["total_million_miles"] == pytest.approx(3_294_031.2)
     assert vmt["vm1_motor_vehicles_registered"] == pytest.approx(
         297_525_836.0)
+
+
+def test_medicare_latest_national_rows(tmp_path, monkeypatch):
+    csv = (
+        "YEAR,MONTH,BENE_GEO_LVL,BENE_STATE_ABRVTN,BENE_COUNTY_DESC,"
+        "BENE_FIPS_CD,TOT_BENES,ORGNL_MDCR_BENES,MA_AND_OTH_BENES,"
+        "AGED_TOT_BENES,AGED_ESRD_BENES,DSBLD_TOT_BENES\n"
+        "2025,11,National,,,,58000000,34000000,24000000,52000000,"
+        "100000,6000000\n"
+        "2026,7,National,,,,60000000,34000000,26000000,54000000,"
+        "100000,6000000\n"
+        "2026,7,State,AL,,,500000,300000,200000,450000,5000,50000\n"
+    )
+    cache = tmp_path / "medicare.csv"
+    cache.write_text(csv)
+    monkeypatch.setattr(medicare_mod, "CACHE", cache)
+
+    benes = medicare_mod.national_aged_beneficiaries()
+    assert benes["year"] == 2026
+    assert benes["month"] == 7
+    assert benes["aged_benes"] == 54_000_000.0
+    assert benes["total_benes"] == 60_000_000.0
+
+    from popest.methods.medicare import estimate
+    r = estimate()
+    expected = 54_000_000 / (0.17 * 0.97)
+    assert r["medicare_central"] == pytest.approx(expected)
+    assert r["medicare_low"] == pytest.approx(
+        54_000_000 / (0.185 * 0.97))
+    assert r["medicare_high"] == pytest.approx(
+        54_000_000 / (0.155 * 0.97))
 
 
 def test_reconciliation_math_kinds():

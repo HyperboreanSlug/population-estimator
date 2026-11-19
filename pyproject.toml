@@ -21,6 +21,11 @@ geo = [
 dev = [
     "pytest>=8.0",
 ]
+# SOCKS proxy support (POP_EST_SOCKS_PROXY) for resolvers that block
+# specific government hosts (for example cms.gov).
+proxy = [
+    "requests[socks]>=2.31",
+]
 
 [project.scripts]
 popest = "popest.cli:main"
