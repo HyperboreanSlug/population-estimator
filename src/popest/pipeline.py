@@ -113,7 +113,7 @@ def run(year: int = 2024, api_key: str | None = None) -> dict:
         from popest.methods.housing import estimate, national_summary
 
         housing = estimate(api_key)
-        if not housing.empty and (housing["fips"].str.len() == 5).any():
+        if not housing.empty and not (housing["fips"] == "00000").any():
             hs = national_summary(housing)
             methods["housing"] = {
                 "central": hs["central"], "low": hs["low"],
