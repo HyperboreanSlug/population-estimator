@@ -47,7 +47,18 @@ def build(summary_path='output/summary.txt'):
     hi = num(re.search(r'^Bootstrap 90% CI: [\d,]+ - ([\d,]+)', text, re.M).group(1))
     pep = num(re.search(r'^Census PEP \(target year\): ([\d,]+)', text, re.M).group(1))
     dec = num(re.search(r'^Census decennial 2020: ([\d,]+)', text, re.M).group(1))
-    n_const = text.count('OUTSIDE their published ranges') and 31 or 31
+    import csv as _csv
+    verdicts = {}
+    with open('output/reconciliation.csv') as f:
+        rdr = _csv.DictReader(f)
+        rows_rc = list(rdr)
+        n_const = len(rows_rc)
+        for lvl in ('census_pep_2024', 'ensemble', 'claimed_400m',
+                    'claimed_450m', 'claimed_500m'):
+            col = f'verdict_{lvl}'
+            if col in rows_rc[0]:
+                outside = sum(1 for r in rows_rc if r[col] == 'OUTSIDE')
+                verdicts[lvl] = (outside, n_const - outside)
 
     block = re.search(r'Method contributions:\n(.*?)\n\nCounty coverage', text, re.S).group(1)
     rows = []
@@ -74,11 +85,28 @@ def build(summary_path='output/summary.txt'):
             f'<div class="{dot_cls}" style="left:{pct(central):.1f}%"></div></div>'
             f'<div class="rval">{central/1e6:.1f}M</div></div>')
     chart = '\n'.join(bar_rows)
-    return ensemble, lo, hi, pep, dec, chart, len(rows)
+    return ensemble, lo, hi, pep, dec, chart, len(rows), verdicts, n_const
 
 
 def render():
-    ensemble, lo, hi, pep, dec, chart, n_rows = build()
+    (ensemble, lo, hi, pep, dec, chart, n_rows,
+     verd, n_const) = build()
+
+    def verdicts_out(level):
+        outside, fits = verd[level]
+        return outside / n_const * 100.0
+
+    def verdicts_txt(level):
+        outside, fits = verd[level]
+        return f'{fits}/{n_const} fit' if level == 'census_pep_2024' \
+            else f'{outside}/{n_const} break'
+
+    # chart geometry: right column content is 612px wide; the track
+    # starts after the 158px label + 10px gap and ends 10px + 52px
+    # before the right edge.
+    def track_x(v):
+        return 168 + 382 * pct(v) / 100.0
+
     html = f'''<!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8">
 <style>
@@ -116,15 +144,20 @@ def render():
   .verdict {{ margin-top:20px; }}
   .verdict h3 {{ font-size:12px; letter-spacing:.14em; color:#475467; text-transform:uppercase;
                 margin-bottom:8px; }}
-  .vline {{ display:flex; align-items:center; gap:10px; padding:5px 0; font-size:13.5px; }}
+  .vline {{ display:flex; align-items:center; gap:10px; padding:4.5px 0; font-size:13.5px; }}
   .vtrack {{ flex:1; height:8px; background:#f2f4f7; border-radius:4px; position:relative; }}
   .vfill {{ position:absolute; height:100%; border-radius:4px; background:#d92d20; left:0; }}
   .vfill.ok {{ background:#12b76a; }}
   .vnum {{ width:58px; text-align:right; font-weight:700; font-variant-numeric:tabular-nums; }}
-  .concl {{ margin-top:18px; font-size:13px; line-height:1.5; color:#344054; background:#fffbeb;
+  .concl {{ margin-top:16px; font-size:13px; line-height:1.5; color:#344054; background:#fffbeb;
            border:1px solid #fde68a; border-radius:10px; padding:11px 14px; }}
   .right h3 {{ font-size:12px; letter-spacing:.14em; color:#475467; text-transform:uppercase;
               margin-bottom:4px; }}
+  .legend {{ display:flex; gap:22px; font-size:12px; color:#344054; margin:6px 0 10px;
+            align-items:center; }}
+  .sw {{ display:inline-block; width:22px; height:0; border-top:2px dashed #101828;
+        margin-right:6px; vertical-align:middle; }}
+  .sw.ens {{ border-top:2px solid #3b6fd4; }}
   .chartwrap {{ position:relative; }}
   .row {{ display:flex; align-items:center; gap:10px; padding:1.6px 0; }}
   .rlabel {{ width:158px; font-size:11.5px; color:#344054; text-align:right; white-space:nowrap;
@@ -137,10 +170,8 @@ def render():
                 background:#101828; transform:translateX(-50%) rotate(45deg); }}
   .census-row .rlabel {{ font-weight:700; }}
   .rval {{ width:52px; font-size:11.5px; color:#475467; font-variant-numeric:tabular-nums; }}
-  .refline {{ position:absolute; top:0; bottom:0; width:1px; border-left:1px dashed #98a2b3;
-             left:0; }}
-  .reftag {{ position:absolute; top:-2px; left:0; font-size:10px; color:#667085;
-            transform:translate(-50%,-100%); white-space:nowrap; }}
+  .vref {{ position:absolute; top:0; bottom:0; width:0; border-left:2px dashed #101828; left:0; }}
+  .vref.ens {{ border-left:2px solid #3b6fd4; }}
   .foot {{ border-top:1px solid #eaecf0; padding:12px 40px; font-size:11px; color:#98a2b3;
           display:flex; justify-content:space-between; }}
   .axline {{ position:relative; height:16px; margin-left:168px; margin-right:62px;
@@ -151,45 +182,50 @@ def render():
   <div class="head">
     <div class="kicker">Population Estimator · Physical Evidence Ensemble</div>
     <h1>United States Estimated Population</h1>
-    <div class="sub">31 measured national sources · 4 county-level voices · generated from the latest run</div>
+    <div class="sub">31 measured national sources · 4 county-level voices · census excluded from weighting (comparison only)</div>
   </div>
   <div class="grid">
     <div class="left">
-      <div class="big">355.6<small>M</small></div>
-      <div class="exact">ensemble central · 355,562,959</div>
+      <div class="big">{ensemble/1e6:.1f}<small>M</small></div>
+      <div class="exact">ensemble central · {ensemble:,.0f}</div>
       <div class="ciwrap">
         <div class="cilabel">BOOTSTRAP 90% CI (1000 DRAWS)</div>
         <div class="cibar"><div class="cifill"></div>
           <div class="cimark" style="left:{pct(pep):.1f}%"></div></div>
-        <div class="civals"><span>{lo/1e6:.1f}M</span><span>370.4M · CI midpoint</span><span>{hi/1e6:.1f}M</span></div>
+        <div class="civals"><span>{lo/1e6:.1f}M</span><span>CI midpoint {(lo+hi)/2e6:.1f}M</span><span>{hi/1e6:.1f}M</span></div>
       </div>
       <div class="vs">
-        <div class="vsrow"><span>Census PEP 2024</span><b>{pep/1e6:.1f}M</b></div>
-        <div class="vsrow"><span>Census decennial 2020</span><b>{dec/1e6:.1f}M</b></div>
+        <div class="vsrow"><span>Census PEP 2024 (comparison)</span><b>{pep/1e6:.1f}M</b></div>
+        <div class="vsrow"><span>Census decennial 2020 (comparison)</span><b>{dec/1e6:.1f}M</b></div>
         <div class="vsrow"><span>Ensemble vs PEP 2024</span><span class="pill">+{100*(ensemble/pep-1):.1f}%</span></div>
       </div>
       <div class="verdict">
         <h3>Reconciliation vs claimed levels</h3>
-        <div class="vline"><span style="width:96px">Census 340.1M</span>
-          <div class="vtrack"><div class="vfill ok" style="width:{27/31*100:.0f}%"></div></div>
-          <div class="vnum">27/31 fit</div></div>
+        <div class="vline"><span style="width:96px">Census {pep/1e6:.0f}M</span>
+          <div class="vtrack"><div class="vfill ok" style="width:{100-verdicts_out('census_pep_2024'):.0f}%"></div></div>
+          <div class="vnum">{verdicts_txt('census_pep_2024')}</div></div>
+        <div class="vline"><span style="width:96px">400M claim</span>
+          <div class="vtrack"><div class="vfill" style="width:{verdicts_out('claimed_400m'):.0f}%"></div></div>
+          <div class="vnum">{verdicts_txt('claimed_400m')}</div></div>
         <div class="vline"><span style="width:96px">450M claim</span>
-          <div class="vtrack"><div class="vfill" style="width:{25/31*100:.0f}%"></div></div>
-          <div class="vnum">25/31 break</div></div>
+          <div class="vtrack"><div class="vfill" style="width:{verdicts_out('claimed_450m'):.0f}%"></div></div>
+          <div class="vnum">{verdicts_txt('claimed_450m')}</div></div>
         <div class="vline"><span style="width:96px">500M claim</span>
-          <div class="vtrack"><div class="vfill" style="width:{29/31*100:.0f}%"></div></div>
-          <div class="vnum">29/31 break</div></div>
+          <div class="vtrack"><div class="vfill" style="width:{verdicts_out('claimed_500m'):.0f}%"></div></div>
+          <div class="vnum">{verdicts_txt('claimed_500m')}</div></div>
       </div>
-      <div class="concl"><b>Reading:</b> 27 of 31 measured totals fit the census count within their
-      published per-capita ranges. Only capacity and coverage figures (wastewater design, vehicles,
-      utility-reported water service) sit far above. <b>450M+ is not supported by the measured
-      evidence.</b></div>
+      <div class="concl"><b>Reading:</b> the census level fits the measured per-capita ranges;
+      every claim above it breaks more. <b>450M+ is not supported by the measured evidence.</b></div>
     </div>
     <div class="right">
       <h3>Every measured voice, central estimate and published range</h3>
+      <div class="legend">
+        <span><span class="sw"></span>Census PEP 2024: {pep/1e6:.1f}M</span>
+        <span><span class="sw ens"></span>Ensemble: {ensemble/1e6:.1f}M</span>
+      </div>
       <div class="chartwrap">
-        <div class="refline" style="left:{168 + (100-168-52-10) * pct(pep)/100 + 10}px">
-          <div class="reftag" style="left:0">PEP 2024</div></div>
+        <div class="vref" style="left:{track_x(pep):.0f}px"></div>
+        <div class="vref ens" style="left:{track_x(ensemble):.0f}px"></div>
         {chart}
       </div>
       <div class="axline">
@@ -202,8 +238,8 @@ def render():
     </div>
   </div>
   <div class="foot">
-    <span>Physical evidence primary: water, wastewater, energy, fuel, meters · census capped at 15% weight</span>
-    <span>data vintages 2015-2026 per source · scripts/estimate_card.py</span>
+    <span>Physical evidence only: water, wastewater, energy, fuel, meters, admin counts · census weight 0 (operator-set)</span>
+    <span>generated from output/summary.txt · scripts/estimate_card.py</span>
   </div>
 </div></body></html>'''
     Path('output/estimate_card.html').write_text(html)

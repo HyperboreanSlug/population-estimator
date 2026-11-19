@@ -292,3 +292,15 @@ commit message, which was written from memory (354,161,842 was wrong). New voice
 - Final: 31 national voices + 4 county voices. Ensemble 355,562,959
   (CI 337.4M-371.7M), ratio 1.045. Reconciliation 31 constants:
   census fits 27/31, 450M breaks 25/31, 500M breaks 29/31.
+
+## Operator weighting order (2026-11-19): census weight = 0
+- The census voice now carries zero ensemble weight nationally
+  (CENSUS_WEIGHT = 0.0 in ensemble.py), in the bootstrap, and in the
+  county ensemble (removed from COUNTY_WEIGHTS). It is comparison-only:
+  still fetched, printed in the method table with w=0.000, kept as a
+  county column and as the reconciliation reference.
+- Effect: ensemble 355,562,959 -> 357,139,690 (CI 337.1M-374.9M);
+  ratio to PEP 2024: 1.045 -> 1.050. County coverage unchanged
+  (the Medicare county voice spans every county).
+- Correction caught by the rerun: the README's "400M breaks 14/31"
+  was an unverified extrapolation; the actual count is 16/31. Fixed.

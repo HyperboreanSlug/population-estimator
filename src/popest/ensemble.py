@@ -50,6 +50,13 @@ METHOD_WEIGHTS = {
 
 CENSUS_WEIGHT_CAP = 0.15
 
+# Operator order 2026-11-19: the census carries ZERO ensemble weight.
+# It is comparison-only: still fetched, reported, and shown in the
+# method table with w=0.000, but it never shifts the estimate. This
+# single switch governs the national combine, the bootstrap, and the
+# county ensemble.
+CENSUS_WEIGHT = 0.0
+
 # wastewater_chem is REPORTED but never ensemble-weighted: its numerator
 # (municipal plants that report mass-unit loads) is a reporting subset,
 # not a national total, so it is a coverage-limited lower bound.
@@ -58,7 +65,6 @@ COUNTY_WEIGHTS = {
     "wastewater": 0.25,
     "medicare": 0.25,
     "housing": 0.20,
-    "census": 0.15,
 }
 
 
@@ -78,11 +84,11 @@ def combine_national(estimates: dict[str, float],
         contributions[method] = {"value": value, "weight": w}
 
     if census and census > 0:
-        census_w = (min(CENSUS_WEIGHT_CAP, 1.0 - total_weight)
-                    if total_weight < 1.0 else CENSUS_WEIGHT_CAP)
-        weighted_sum += census * census_w
-        total_weight += census_w
-        contributions["census"] = {"value": census, "weight": census_w}
+        from popest.ensemble import CENSUS_WEIGHT
+
+        weighted_sum += census * CENSUS_WEIGHT
+        total_weight += CENSUS_WEIGHT
+        contributions["census"] = {"value": census, "weight": CENSUS_WEIGHT}
 
     if total_weight == 0:
         return {"combined": 0.0, "total_weight": 0.0, "contributions": {}}

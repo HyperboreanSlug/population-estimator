@@ -27,7 +27,7 @@ constant methods are sampled exactly.
 
 import numpy as np
 
-from popest.ensemble import CENSUS_WEIGHT_CAP, METHOD_WEIGHTS
+from popest.ensemble import METHOD_WEIGHTS
 
 N_DRAWS_DEFAULT = 1000
 SEED = 13
@@ -69,11 +69,11 @@ def bootstrap_national(methods: dict[str, dict], census: float,
 
     weighted = draws * weights
     wsum = weights.sum()
-    if census > 0:
-        census_w = (min(CENSUS_WEIGHT_CAP, 1.0 - wsum)
-                    if wsum < 1.0 else CENSUS_WEIGHT_CAP)
-        weighted = weighted.sum(axis=1) + census * census_w
-        wsum = wsum + census_w
+    from popest.ensemble import CENSUS_WEIGHT
+
+    if census > 0 and CENSUS_WEIGHT > 0:
+        weighted = weighted.sum(axis=1) + census * CENSUS_WEIGHT
+        wsum = wsum + CENSUS_WEIGHT
     else:
         weighted = weighted.sum(axis=1)
 

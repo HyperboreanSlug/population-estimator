@@ -5,8 +5,9 @@ granularity, using physical infrastructure as primary evidence.
 
 Water consumption, wastewater chemistry (nitrogen, ammonia, BOD), energy use,
 waste generation, food supply, and healthcare utilization reveal actual human
-presence independent of self-report surveys. Census data is included for
-comparison only, capped at 15% of ensemble weight, never as an anchor.
+presence independent of self-report surveys. Census data is comparison-only:
+since the operator-set weighting change of 2026-11-19 it carries zero ensemble
+weight. It never shifts the estimate.
 
 See [PLAN.md](PLAN.md) for full methodology, data sources, and per-capita
 calibration constants. [SOURCE.md](SOURCE.md) documents every module.
@@ -53,67 +54,64 @@ All written to `output/` by `popest run`:
   level vs. its published range
 - `summary.txt` — human-readable report
 
-## Results (run of 2026-11-19, 31 national voices, all reachable data downloaded)
+## Results (run of 2026-11-19, 31 national voices, census weight 0)
 
 | Metric | Value |
 |--------|-------|
-| Ensemble central | 355,562,959 |
-| Bootstrap 90% CI (1000 draws) | 337,364,510 - 371,701,903 |
-| Census PEP 2024 | 340,110,988 |
-| Ratio to census PEP | 1.045 |
-| Census decennial 2020 | 331,449,281 |
+| Ensemble central | 357,139,690 |
+| Bootstrap 90% CI (1000 draws) | 337,084,257 - 374,925,466 |
+| Census PEP 2024 (comparison only) | 340,110,988 |
+| Ratio to census PEP | 1.050 |
+| Census decennial 2020 (comparison only) | 331,449,281 |
 
-Method contributions (central, weight, data):
+The census carries **zero ensemble weight** (operator-set 2026-11-19):
+it is fetched, reported, and used as the reconciliation reference, but
+it never shifts the estimate. Method contributions (central, weight,
+data):
 
 | Method | Central | Weight | Data |
 |--------|---------|--------|------|
-| Wastewater design flow | 553.7M | 0.09 | EPA ICIS-NPDES permits |
-| Vehicles | 427.5M | 0.03 | FHWA registrations 2022 |
-| Water systems served | 390.5M | 0.04 | EPA SDWIS: 331.9M utility-reported, active CWS |
-| Medicare aged | 388.4M | 0.03 | CMS July 2026: 64.04M aged beneficiaries |
-| Water budget | 356.2M | 0.10 | USGS 2015, 3,142 counties |
-| Energy | 353.1M | 0.04 | EIA SEDS residential kWh 2024 |
-| BLS employment | 352.5M | 0.03 | BLS API |
-| Transit trips | 348.6M | 0.01 | NTD 2024: 7.67B unlinked trips |
-| Air enplanements | 347.5M | 0.01 | FAA CY2025: 973M boardings |
-| Licensed drivers | 341.6M | 0.02 | FHWA DL-1C 2024: 239.8M drivers |
-| Electricity meters | 343.5M | 0.02 | EIA-861: 143.1M meters (Bundled+Delivery) |
-| Grocery stores | 341.2M | 0.02 | Census MARTS 2025: $1.007T (NAICS 445) |
-| BEA income | 341.1M | 0.02 | BEA 2024: $24.90T personal income |
-| College enrollment | 340.0M | 0.01 | IPEDS 2023: 19.04M students |
-| Hospital inpatient days | 339.3M | 0.01 | CMS cost report FY2021: 190.0M days |
-| Medicaid+CHIP | 339.3M | 0.01 | CMS 2026-07: 72.95M enrolled |
-| Census PEP 2024 | 340.1M | 0.09 | capped comparison voice |
-| SNAP | 339.9M | 0.02 | USDA FNS FY2025: 42.14M participants |
-| Gasoline | 339.7M | 0.03 | EIA product supplied |
-| Total energy | 339.7M | 0.02 | EIA 2025: 96.5 quad Btu |
-| VMT | 339.6M | 0.02 | FHWA 2024: 3.294T miles |
-| Food expenditure | 339.4M | 0.01 | ERS 2025: $2.51T all purchasers |
-| K-12 enrollment | 337.2M | 0.03 | NCES 2024-25: 49.57M students |
-| Gas volume | 335.0M | 0.02 | EIA 2024: 4,389 Bcf |
-| Library visits | 334.7M | 0.01 | IMLS FY2023: 803M visits |
-| Wireless | 333.3M | 0.02 | CTIA survey 2023 |
-| IRS AGI | 328.3M | 0.03 | IRS SOI TY2022: $14.61T |
-| Births | 327.8M | 0.03 | PEP 2024: 3,605,563 (NCHS-derived) |
-| MSW | 327.0M | 0.03 | EPA 2018 |
-| Healthcare (ER) | 325.0M | 0.04 | CDC NCHS 2021 |
-| IRS exemptions | 323.1M | 0.05 | IRS SOI TY2022: 284.3M |
-| Housing | 321.3M | 0.04 | census 2020 housing units |
-| Gas customers | 313.3M | 0.01 | EIA 2024: 73.7M gas meters |
-| Deaths | 308.7M | 0.03 | PEP 2024: 3,086,925 (NCHS-derived) |
-| Buildings | 209.3M | 0.04 | MS footprints (approximated ratios) |
+| Wastewater design flow | 553.7M | 0.088 | EPA ICIS-NPDES permits |
+| Vehicles | 427.5M | 0.027 | FHWA registrations 2022 |
+| Water systems served | 390.5M | 0.041 | EPA SDWIS: 331.9M active CWS |
+| Medicare aged | 388.4M | 0.027 | CMS 2026-07: 64.04M aged |
+| Water budget | 356.2M | 0.109 | USGS 2015, 3,142 counties |
+| Energy | 353.1M | 0.041 | EIA SEDS kWh 2024 |
+| BLS employment | 352.5M | 0.034 | BLS API |
+| Transit trips | 348.6M | 0.007 | NTD 2024: 7.67B trips |
+| Air enplanements | 347.5M | 0.014 | FAA CY2025: 973M |
+| Electricity meters | 343.5M | 0.020 | EIA-861: 143.1M meters |
+| Licensed drivers | 341.6M | 0.020 | FHWA DL-1C: 239.8M drivers |
+| Grocery stores | 341.2M | 0.020 | Census MARTS 2025: $1.007T |
+| BEA income | 341.1M | 0.014 | BEA 2024: $24.90T |
+| Census PEP 2024 (comparison) | 340.1M | 0.000 | PEP 2024 |
+| College enrollment | 340.0M | 0.014 | IPEDS 2023: 19.04M |
+| SNAP | 339.9M | 0.020 | FNS FY2025: 42.14M |
+| Gasoline | 339.7M | 0.027 | EIA supplied |
+| Total energy | 339.7M | 0.020 | EIA 2025: 96.5 quad |
+| VMT | 339.6M | 0.020 | FHWA 2024: 3.294T miles |
+| Food expenditure | 339.4M | 0.014 | ERS 2025: $2.51T |
+| Hospital inpatient days | 339.3M | 0.014 | CMS FY2021: 190.0M days |
+| Medicaid+CHIP | 339.3M | 0.014 | CMS 2026-07: 72.95M |
+| K-12 enrollment | 337.2M | 0.027 | NCES 2024-25: 49.57M |
+| Gas volume | 335.0M | 0.020 | EIA 2024: 4,389 Bcf |
+| Library visits | 334.7M | 0.007 | IMLS FY2023: 803M |
+| Wireless | 333.3M | 0.020 | CTIA 2023 |
+| IRS AGI | 328.3M | 0.027 | SOI TY2022: $14.61T |
+| Births | 327.8M | 0.034 | PEP 2024: 3,605,563 births |
+| MSW | 327.0M | 0.034 | EPA 2018 |
+| Healthcare (ER) | 325.0M | 0.041 | CDC NCHS 2021 |
+| IRS exemptions | 323.1M | 0.054 | SOI TY2022: 284.3M |
+| Housing | 321.3M | 0.048 | census 2020 units |
+| Gas customers | 313.3M | 0.014 | EIA 2024: 73.7M |
+| Deaths | 308.7M | 0.027 | PEP 2024: 3,086,925 deaths |
+| Buildings | 209.3M | 0.041 | MS footprints (approximated) |
 
-Reported, not ensemble-weighted:
-
-- Wastewater chemistry (EPA DMR mass loads): BOD 17.6M / TSS 208.6M
-  population equivalents; only 4,046 of ~30,121 municipal plants report
-  BOD in mass units, so the numerator is a reporting subset
-- LMOP measured landfill acceptance: 470.97M tons/yr from 2,233 landfills
-  (all waste streams, mixed reporting years; upper-bound context, not
-  comparable to EPA's modeled MSW generation)
-- FHWA VM-1 "motor vehicles" 2024: 297.5M (different count basis than the
-  MV-1 registrations the vehicles method calibrates on)
-- NSLP FY2025 29.99M avg daily participation; WIC FY2025 6.87M participants
+| Census PEP 2024 (340.1M) | 27 of 31 fit |
+| Ensemble (357.1M) | 5 of 31 outside published range |
+| 400M | 16 of 31 outside published range |
+| 450M | 25 of 31 outside published range |
+| 500M | 29 of 31 outside published range |
 
 ## What a 450M+ claim would require
 
@@ -124,28 +122,24 @@ the constant's published range (`output/reconciliation.csv`):
 | Claimed population | Constants outside published range |
 |---|---|
 | Census PEP 2024 (340.1M) | 4 of 31 |
-| Ensemble (355.6M) | 5 of 31 |
-| 400M | 14 of 31 |
+| Ensemble (357.1M) | 5 of 31 |
+| 400M | 16 of 31 |
 | 450M | 25 of 31 |
 | 500M | 29 of 31 |
 
 At 450M only six measured totals stay inside their published ranges:
 total water withdrawals, vehicle registrations, wastewater design
 capacity (a capacity figure with growth headroom), and the widest-range
-behavioral voices (transit, libraries). Every other measured total —
-electricity sold and metered, gas meters and volume, gasoline, VMT,
-total energy, MSW, K-12 and college enrollment, SNAP, births, deaths,
-ER visits, IRS exemptions and AGI, housing units, employment, Medicare
-aged enrollment, water systems served, food expenditure — would need
-its per-capita rate to be wrong by 15-45% in the same direction
-simultaneously. At 500M only two survive.
+behavioral voices (transit, libraries). Every other measured total
+would need its per-capita rate to be wrong by 15-45% in the same
+direction simultaneously. At 500M only two survive.
 
 Four voices sit meaningfully above census: utility-reported
 community-water population served (378-405M), Medicare aged
 beneficiaries (357-426M), vehicle registrations (363-485M), and
 wastewater design capacity (403-738M). The bootstrap 90% CI of the full
-ensemble is 337-372M. The measured evidence does not support 450M+; it
-clusters between the census count and roughly 370M.
+census-free ensemble is 337-375M. The measured evidence does not
+support 450M+; it clusters between the census count and roughly 375M.
 
 ## Method status (data honesty)
 
