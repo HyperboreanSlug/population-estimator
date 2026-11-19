@@ -318,3 +318,24 @@ commit message, which was written from memory (354,161,842 was wrong). New voice
 - Final ensemble: 338,272,455 (CI 326.3M-349.4M), ratio 0.995 vs PEP
   2024. Reconciliation: census 4/31 outside, ensemble 4/31, 400M
   16/31, 450M 25/31, 500M 29/31.
+
+## Weight audit (operator order 2026-11-19)
+- Recomputation audit: all 31 voices recompute exactly from numerator x
+  constant (housing's apparent mismatch was an audit-script formula
+  error: GQ is additive units x 0.025, and the method's 321,320,609 is
+  exact).
+- Weight violations found against the plan's own criteria
+  (census-independence, biological fixedness, coverage completeness):
+  buildings 0.06 (PLAN Tier 5 classes geospatial as validation-only;
+  numerator approximated from repo docs) -> demoted to reported-only;
+  housing 0.07 (numerator IS the decennial census enumeration) ->
+  0.04; healthcare 0.06 (all published-statistics literature, no bulk
+  source) -> 0.03; wireless 0.03 (CTIA literature, no public dataset)
+  -> 0.02.
+- Source labels now carry the evidence class: vehicles "(published
+  statistic)", healthcare "(published statistics)", wireless
+  "(published estimate, no public dataset)", housing "(decennial
+  enumeration)", buildings "(approximated, Tier-5 validation)".
+- Post-correction ensemble: 344,666,317 (CI 332.0M-356.4M), ratio
+  1.013; census capped share 11.0%. Audit script committed as
+  scripts/audit_weights.py for repeatable verification.

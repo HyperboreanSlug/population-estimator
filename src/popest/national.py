@@ -64,7 +64,7 @@ def healthcare() -> dict:
     r = estimate()
     return {"central": r["er_central"], "low": r["er_low"],
             "high": r["er_high"], "form": "inverse",
-            "source": "CDC NCHS ER visits 2021"}
+            "source": "CDC NCHS ER visits 2021 (published statistics)"}
 
 
 def vitals() -> dict:
@@ -113,19 +113,22 @@ def buildings() -> dict:
     r = estimate_from_buildings()
     return {"central": r["buildings_central"], "low": r["buildings_low"],
             "high": r["buildings_high"], "form": "direct",
-            "source": "MS building footprints (5 states verified)"}
+            "source": "MS footprints: approximated (Tier-5 validation, "
+                      "reported-only)"}
 
 
 NATIONAL_MULTI_SPEC = {
-    "msw": ("msw", "inverse", "EPA MSW 2018"),
+    "msw": ("msw", "inverse", "EPA MSW 2018 (modeled figure)"),
     "gasoline": ("gasoline", "inverse", "EIA gasoline"),
-    "vehicles": ("vehicles", "inverse", "FHWA registrations 2022"),
+    "vehicles": ("vehicles", "inverse",
+                 "FHWA registrations 2022 (published statistic)"),
     "vmt": ("vmt", "inverse", "FHWA VMT 2024"),
 }
 
 CONSUMPTION_SPEC = {
     "snap": ("snap", "inverse", "USDA FNS SNAP FY2025 (annual summary)"),
-    "wireless": ("wireless", "inverse", "CTIA survey 2023"),
+    "wireless": ("wireless", "inverse",
+                 "CTIA 2023 (published estimate, no public dataset)"),
     "grocery": ("grocery", "inverse",
                 "Census MARTS 445 food & beverage stores 2025"),
 }

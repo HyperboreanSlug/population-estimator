@@ -21,13 +21,13 @@ METHOD_WEIGHTS = {
     "gasoline": 0.04,
     "vmt": 0.03,
     "vehicles": 0.04,
-    "healthcare": 0.06,
-    "housing": 0.07,
+    "healthcare": 0.03,  # published statistics only, no bulk source
+    "housing": 0.04,  # census-collected numerator, engineering constants
     "vitals": 0.05,
     "vitals_deaths": 0.04,
-    "buildings": 0.06,
+    "buildings": 0.0,  # Tier-5 validation + approximated: reported-only
     "snap": 0.03,
-    "wireless": 0.03,
+    "wireless": 0.02,  # CTIA literature; no public dataset exists
     "grocery": 0.03,
     "irs": 0.08,
     "irs_agi": 0.04,

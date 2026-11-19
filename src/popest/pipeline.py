@@ -125,7 +125,8 @@ def run(year: int = 2024, api_key: str | None = None) -> dict:
             methods["housing"] = {
                 "central": hs["central"], "low": hs["low"],
                 "high": hs["high"], "form": "direct",
-                "source": f"census housing units {hs.get('counties', 0)} counties",
+                "source": f"census 2020 units, {hs.get('counties', 0)} "
+                          f"counties (decennial enumeration)",
             }
             county_dfs["housing"] = housing
         elif not housing.empty:
@@ -134,7 +135,8 @@ def run(year: int = 2024, api_key: str | None = None) -> dict:
                 "central": central,
                 "low": float(housing["pop_housing_low"].sum()),
                 "high": float(housing["pop_housing_high"].sum()),
-                "form": "direct", "source": "census housing units (national)",
+                "form": "direct",
+                "source": "census 2020 units (decennial enumeration)",
             }
         print(f"  central {methods.get('housing', {}).get('central', 0):,.0f}")
     except Exception as e:
@@ -272,6 +274,15 @@ def run(year: int = 2024, api_key: str | None = None) -> dict:
         print(f"  Medicare county voice FAILED: {e}")
 
     # --- reported-only voices (never ensemble-weighted) ----------------
+    try:
+        notes.append(
+            "Building footprints REPORTED, not weighted: PLAN.md Tier 5 "
+            "classes geospatial products as validation-only, and this "
+            "voice is approximated throughout (national total from "
+            "repo docs, 5 states verified; residential fraction, "
+            "occupancy, household size are engineering estimates).")
+    except Exception as e:
+        print(f"  buildings reported voice FAILED: {e}")
     try:
         from pathlib import Path as _P
         import pandas as _pd
