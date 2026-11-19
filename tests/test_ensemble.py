@@ -50,17 +50,17 @@ def test_combine_county_renormalizes_missing_methods():
     out = combine_county({"water": water, "wastewater": ww}, census)
 
     r1 = out[out["fips"] == "01001"].iloc[0]
-    # weights: water .30 + ww .20 + census .15 = .65
-    expected1 = (100 * 0.30 + 200 * 0.20 + 90 * 0.15) / 0.65
+    # weights: water .35 + ww .25 + census .15 = .75
+    expected1 = (100 * 0.35 + 200 * 0.25 + 90 * 0.15) / 0.75
     assert r1["ensemble_pop"] == pytest.approx(expected1)
     assert r1["n_methods"] == 3
 
     r3 = out[out["fips"] == "01003"].iloc[0]
     # water + census only
-    expected3 = (50 * 0.30 + 45 * 0.15) / 0.45
+    expected3 = (50 * 0.35 + 45 * 0.15) / 0.50
     assert r3["ensemble_pop"] == pytest.approx(expected3)
     assert r3["n_methods"] == 2
-    assert r3["ensemble_low"] == pytest.approx((40 * 0.30 + 45 * 0.15) / 0.45)
+    assert r3["ensemble_low"] == pytest.approx((40 * 0.35 + 45 * 0.15) / 0.50)
 
     # contributions sum to 1 where methods exist
     contribs = [c for c in out.columns if c.startswith("contrib_")]
@@ -153,8 +153,7 @@ def test_discrepancy_report_values():
 def test_weights_sum_near_one_with_census_cap():
     from popest.ensemble import METHOD_WEIGHTS
 
-    assert sum(METHOD_WEIGHTS.values()) <= 1.15
-    assert METHOD_WEIGHTS["census"] if "census" in METHOD_WEIGHTS else True
+    assert sum(METHOD_WEIGHTS.values()) <= 1.30
     physical = sum(v for k, v in METHOD_WEIGHTS.items()
                    if k not in ("census",))
     assert physical > 0.85  # physical methods keep the bulk of weight

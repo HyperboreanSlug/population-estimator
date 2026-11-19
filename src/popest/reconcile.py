@@ -65,9 +65,36 @@ def gather_totals() -> dict:
         totals["employed"] = (
             float(bls["total_employed_thousands"][0]["value"]) * 1000.0)
 
-    from popest.vitals import national_births_2022
+    from popest.vitals import national_births, national_deaths
 
-    totals["births"] = float(national_births_2022())
+    totals["births"] = float(national_births(2024)["count"])
+    totals["deaths"] = float(national_deaths(2024)["count"])
+
+    try:
+        from popest.irs import load_soi_agi
+
+        totals["irs_agi"] = load_soi_agi()["total_agi"]
+    except Exception:
+        pass
+
+    try:
+        from popest.energy import total_primary_energy
+
+        te = total_primary_energy()
+        if te:
+            totals["total_energy_btus"] = te["quad_btu"] * 1e15
+    except Exception:
+        pass
+
+    try:
+        from popest.energy import fetch_natural_gas_residential
+
+        gas = fetch_natural_gas_residential()
+        if not gas.empty:
+            totals["gas_volume_cf"] = (
+                float(gas["residential_bcf"].sum()) * 1e9)
+    except Exception:
+        pass
 
     from popest.education import public_enrollment
 
@@ -132,7 +159,15 @@ ROWS = [
     ("IRS non-filer share", "fraction", "irs_exemptions", 0.08, 0.18,
      "complement", 1.0, "exemptions counted, rest non-filers"),
     ("birth rate", "births/1000/year", "births", 9.5, 13.0,
-     "divide", 1000.0, "CDC NCHS 2022 births"),
+     "divide", 1000.0, "Census PEP BIRTHS2024 (NCHS-derived)"),
+    ("death rate", "deaths/1000/year", "deaths", 8.5, 12.0,
+     "divide", 1000.0, "Census PEP DEATHS2024 (NCHS-derived)"),
+    ("IRS AGI", "dollars/person/year", "irs_agi", 38000.0, 52000.0,
+     "divide", 1.0, "IRS SOI total AGI / population"),
+    ("total primary energy", "million Btu/person/year", "total_energy_btus",
+     250.0, 320.0, "divide", 1e-6, "EIA MER total consumption"),
+    ("residential gas volume", "cubic feet/person/year", "gas_volume_cf",
+     9000.0, 18000.0, "divide", 1.0, "EIA residential deliveries"),
     ("employment share", "employed/person", "employed", 0.4446, 0.4836,
      "divide", 1.0, "BLS EP ratio 0.57-0.62 x 0.78 adult share"),
     ("SNAP participation", "fraction", "snap", 0.11, 0.14,

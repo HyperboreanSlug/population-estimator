@@ -172,38 +172,65 @@ def run(year: int = 2024, api_key: str | None = None) -> dict:
     # --- national-only methods ---------------------------------------
     from popest import national
 
-    step("[6/15] Energy (EIA residential electricity)...")
+    step("Energy (EIA residential electricity)...")
     national.add_national(methods, "energy", national.energy)
 
-    step("[7/15] Waste/food/vehicles/VMT...")
+    step("Waste/food/vehicles/VMT...")
     national.add_national_multi(methods, national.waste_food,
                                national.NATIONAL_MULTI_SPEC)
 
-    step("[8/15] Healthcare utilization...")
+    step("Healthcare utilization...")
     national.add_national(methods, "healthcare", national.healthcare)
 
-    step("[9/15] Vitals (births/deaths)...")
+    step("Vitals: births...")
     national.add_national(methods, "vitals", national.vitals)
 
-    step("[10/15] Consumption (SNAP/wireless/grocery)...")
+    step("Vitals: deaths...")
+    national.add_national(methods, "vitals_deaths", national.deaths)
+
+    step("Consumption (SNAP/wireless/grocery)...")
     national.add_national_multi(methods, national.consumption,
                                 national.CONSUMPTION_SPEC)
 
-    step("[11/15] IRS filers / BLS employment...")
+    step("IRS filers...")
     national.add_national(methods, "irs", national.irs)
+
+    step("IRS total AGI...")
+    national.add_national(methods, "irs_agi", national.agi)
+
+    step("BLS employment...")
     national.add_national(methods, "bls", national.bls)
 
-    step("[12/15] Education (NCES enrollment)...")
+    step("Education (NCES enrollment)...")
     national.add_national(methods, "education", national.education)
 
-    step("[13/15] Water systems (EPA SDWIS CWS served)...")
+    step("Water systems (EPA SDWIS CWS served)...")
     national.add_national(methods, "sdwis", national.sdwis)
 
-    step("[14/15] Medicare aged beneficiaries...")
+    step("Medicare aged beneficiaries (national + county)...")
     national.add_national(methods, "medicare", national.medicare)
 
-    step("[15/15] Building footprints...")
+    step("Total primary energy...")
+    national.add_national(methods, "total_energy", national.total_energy)
+
+    step("Residential natural gas volume...")
+    national.add_national(methods, "gas_volume", national.gas_volume)
+
+    step("Building footprints...")
     national.add_national(methods, "buildings", national.buildings)
+
+    # --- county medicare voice ------------------------------------------
+    try:
+        from popest.medicare import county_aged_beneficiaries
+        from popest.methods.medicare import estimate_county
+
+        med_county = estimate_county(county_aged_beneficiaries())
+        if not med_county.empty:
+            county_dfs["medicare"] = med_county
+            print(f"  Medicare county voice: {len(med_county)} counties")
+    except Exception as e:
+        notes.append(f"medicare county FAILED: {e}")
+        print(f"  Medicare county voice FAILED: {e}")
 
     # --- reported-only voices (never ensemble-weighted) ----------------
     try:

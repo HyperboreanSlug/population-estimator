@@ -71,9 +71,12 @@ def vitals() -> dict:
     from popest.methods.vitals import estimate
 
     r = estimate()
+    if not r or r.get("births_central", 0) <= 0:
+        return {}
     return {"central": r["births_central"], "low": r["births_low"],
             "high": r["births_high"], "form": "inverse",
-            "source": "CDC NCHS births 2022"}
+            "source": f"births {r['year']}: {r['births_count']:,.0f} "
+                      f"({r['births_source']})"}
 
 
 def consumption() -> dict:
@@ -150,6 +153,71 @@ def sdwis() -> dict:
                        f"{r.get('cws_pop_served', 0):,.0f}")}
 
 
+def deaths() -> dict:
+    from popest.methods.vitals import estimate
+
+    r = estimate()
+    if not r or r.get("deaths_central", 0) <= 0:
+        return {}
+    return {"central": r["deaths_central"], "low": r["deaths_low"],
+            "high": r["deaths_high"], "form": "inverse",
+            "source": f"deaths {r['year']}: {r['deaths_count']:,.0f} "
+                      f"({r['deaths_source']})"}
+
+
+def agi() -> dict:
+    """Population from total IRS adjusted gross income."""
+    from popest.constants import IRS_AGI_PER_CAPITA
+    from popest.irs import load_soi_agi
+
+    r = load_soi_agi()
+    if not r or r.get("total_agi", 0) <= 0:
+        return {}
+    return {"central": r["total_agi"] / IRS_AGI_PER_CAPITA.central,
+            "low": r["total_agi"] / IRS_AGI_PER_CAPITA.high,
+            "high": r["total_agi"] / IRS_AGI_PER_CAPITA.low,
+            "form": "inverse",
+            "source": f"IRS SOI total AGI TY2022 (${r['total_agi']:,.0f})"}
+
+
+def total_energy() -> dict:
+    """Population from total primary energy consumption."""
+    from popest.constants import TOTAL_ENERGY_PER_CAPITA
+    from popest.energy import total_primary_energy
+
+    e = total_primary_energy()
+    if not e:
+        return {}
+    btus = e["quad_btu"] * 1e15
+    per_capita = TOTAL_ENERGY_PER_CAPITA.central * 1e6  # million Btu
+    low_pc = TOTAL_ENERGY_PER_CAPITA.low * 1e6
+    high_pc = TOTAL_ENERGY_PER_CAPITA.high * 1e6
+    return {"central": btus / per_capita,
+            "low": btus / high_pc,
+            "high": btus / low_pc,
+            "form": "inverse",
+            "source": f"EIA total primary energy {e['year']} "
+                      f"({e['quad_btu']:.1f} quad Btu)"}
+
+
+def gas_volume() -> dict:
+    """Population from residential natural gas consumption volume."""
+    from popest.constants import GAS_RESIDENTIAL_PER_CAPITA
+    from popest.energy import fetch_natural_gas_residential
+
+    g = fetch_natural_gas_residential()
+    if g.empty:
+        return {}
+    cf = g["residential_bcf"].sum() * 1e9
+    year = int(g["year"].max())
+    return {"central": cf / GAS_RESIDENTIAL_PER_CAPITA.central,
+            "low": cf / GAS_RESIDENTIAL_PER_CAPITA.high,
+            "high": cf / GAS_RESIDENTIAL_PER_CAPITA.low,
+            "form": "inverse",
+            "source": f"EIA residential gas {year} "
+                      f"({g['residential_bcf'].sum():,.0f} Bcf)"}
+
+
 def medicare() -> dict:
     from popest.methods.medicare import estimate
 
@@ -167,10 +235,14 @@ def collect_all(methods: dict) -> None:
     add_national_multi(methods, waste_food, NATIONAL_MULTI_SPEC)
     add_national(methods, "healthcare", healthcare)
     add_national(methods, "vitals", vitals)
+    add_national(methods, "vitals_deaths", deaths)
     add_national_multi(methods, consumption, CONSUMPTION_SPEC)
     add_national(methods, "irs", irs)
+    add_national(methods, "irs_agi", agi)
     add_national(methods, "bls", bls)
     add_national(methods, "education", education)
     add_national(methods, "sdwis", sdwis)
     add_national(methods, "medicare", medicare)
+    add_national(methods, "total_energy", total_energy)
+    add_national(methods, "gas_volume", gas_volume)
     add_national(methods, "buildings", buildings)

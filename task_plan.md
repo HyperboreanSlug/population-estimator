@@ -142,3 +142,17 @@ Status: complete
 - [x] reconcile.py: implied constants at 340.1M/361M/400M/450M/500M
 - [x] Reported-only voices: chemistry, LMOP, TTB, NSLP/WIC, VM-1 vehicles
 - [x] 36 tests passing; README results + reconciliation section; pushed
+
+### Phase 15: Wire all remaining sources (user order 2026-11-19)
+Status: in_progress
+- [ ] On-disk five: PEP births/deaths (vitals real data), IRS AGI voice,
+      EIA total energy voice, NGRCP gas volume voice, Medicare county
+      voice into the county ensemble
+- [ ] URL hunt (subagent): EIA-861 meters, EIA-176 gas customers,
+      TSA/FAA enplanements, NTD transit, SSA OASDI, IPEDS, ERS food
+      expenditure, IMLS, USFWS licenses, HUD USPS, BEA PCE
+- [ ] Wire each verified source: client + method + constants + weights
+- [ ] GHSL as reported-only (census-trained satellite, validation-only
+      per PLAN.md); WONDER superseded by PEP NCHS-derived columns
+- [ ] Rebalance ensemble + county weights; extend reconciliation rows
+- [ ] Tests, full run, docs, push

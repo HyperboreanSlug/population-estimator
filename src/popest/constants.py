@@ -178,6 +178,36 @@ VMT_PER_PERSON = PerCapitaConstant(
            "weight. 2024 total: 3.294T miles.",
 )
 
+IRS_AGI_PER_CAPITA = PerCapitaConstant(
+    central=44500.0,
+    low=38000.0,
+    high=52000.0,
+    unit="dollars/person/year",
+    source="IRS SOI total AGI / population (~$14.8T / 333M in 2022). "
+           "Census-informed denominator; behavioral-administrative voice "
+           "with modest weight.",
+)
+
+TOTAL_ENERGY_PER_CAPITA = PerCapitaConstant(
+    central=284.0,
+    low=250.0,
+    high=320.0,
+    unit="million Btu/person/year",
+    source="EIA total primary energy per capita (state energy office "
+           "published ~284 MMBtu). Census-informed denominator; "
+           "cross-check voice.",
+)
+
+GAS_RESIDENTIAL_PER_CAPITA = PerCapitaConstant(
+    central=13100.0,
+    low=9000.0,
+    high=18000.0,
+    unit="cubic feet/person/year",
+    source="EIA residential natural gas deliveries / population "
+           "(4.39 Tcf / 334M in 2024 = ~13,100 cf). Census-informed "
+           "denominator; heating-climate variance is wide.",
+)
+
 GAL_PER_MGAL = 1_000_000.0
 GRAMS_PER_LB = 453.592
 MGD_TO_GAL_DAY = 1_000_000.0

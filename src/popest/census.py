@@ -59,6 +59,25 @@ def fetch_census_pep_counties(year: int = 2024) -> dict:
     }
 
 
+def fetch_census_pep_vitals(year: int = 2024) -> dict:
+    """County-file vital events for the target year (NCHS-derived,
+    Census PEP vintage adjustments). Returns {births, deaths, year_used}
+    or zeros when the PEP CSV is missing.
+    """
+    if not PEP_COUNTY_CSV.exists():
+        return {"births": 0, "deaths": 0, "year_used": None}
+
+    year_used = min(PEP_YEARS, key=lambda y: abs(y - year))
+    df = pd.read_csv(PEP_COUNTY_CSV, dtype={"STATE": str, "COUNTY": str},
+                     encoding="latin-1", low_memory=False)
+    df = df[df["SUMLEV"] == 50]
+    return {
+        "births": int(df[f"BIRTHS{year_used}"].sum()),
+        "deaths": int(df[f"DEATHS{year_used}"].sum()),
+        "year_used": year_used,
+    }
+
+
 def _fetch_pl(variable: str, value_col: str, api_key: str | None) -> pd.DataFrame:
     """Fetch a 2020 PL variable by county. Returns county rows or None."""
     url = f"{CENSUS_API_BASE}/2020/dec/pl?get=NAME,{variable}&for=county:*"

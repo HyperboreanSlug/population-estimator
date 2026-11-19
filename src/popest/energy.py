@@ -25,6 +25,33 @@ GAS_SERIES = "NGRCP"
 NON_STATE_CODES = {"US", "X3", "X5"}
 
 
+def total_primary_energy() -> dict:
+    """Total US primary energy consumption, latest annual.
+
+    Source: data/eia/total_energy_monthly.csv (EIA MER Table 1.1).
+    Annual rows have YYYYMM ending in 13.
+    """
+    path = Path("data/eia/total_energy_monthly.csv")
+    if not path.exists():
+        return {}
+    df = pd.read_csv(path, dtype={"YYYYMM": str})
+    annual = df[df["YYYYMM"].str.endswith("13")].copy()
+    if annual.empty:
+        return {}
+    latest = annual["YYYYMM"].max()
+    cons = annual[(annual["YYYYMM"] == latest)
+                  & annual["Description"].str.contains(
+                      "Total Primary Energy Consumption", na=False)]
+    if cons.empty:
+        return {}
+    return {
+        "year": int(latest[:4]),
+        "quad_btu": float(cons["Value"].iloc[0]),
+        "source": "data/eia/total_energy_monthly.csv (MER Table 1.1, "
+                  "Total Primary Energy Consumption, annual)",
+    }
+
+
 def _fetch_series(msn: str, year: int | None,
                   value_col: str) -> pd.DataFrame:
     """Read one SEDS series per state. Returns [state, year, value]."""

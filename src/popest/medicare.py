@@ -36,6 +36,37 @@ def _proxies() -> dict | None:
     return {"https": proxy, "http": proxy}
 
 
+def county_aged_beneficiaries() -> pd.DataFrame:
+    """County-level aged Medicare beneficiaries, latest month.
+
+    Returns DataFrame [fips, aged_benes] from BENE_GEO_LVL == "County"
+    rows. Requires the enrollment CSV (155 MB).
+    """
+    path = download_medicare_csv()
+    df = pd.read_csv(path, dtype=str, low_memory=False,
+                     usecols=["YEAR", "MONTH", "BENE_GEO_LVL",
+                              "BENE_FIPS_CD", "AGED_TOT_BENES"])
+    df = df[df["BENE_GEO_LVL"] == "County"].copy()
+    if df.empty:
+        return pd.DataFrame(columns=["fips", "aged_benes"])
+    df = df[df["MONTH"].isin(MONTH_ORDER)].copy()
+    df["YEAR"] = pd.to_numeric(df["YEAR"], errors="coerce")
+    df = df.dropna(subset=["YEAR"])
+    latest_year = int(df["YEAR"].max())
+    df = df[df["YEAR"] == latest_year]
+    df["month_idx"] = df["MONTH"].map(MONTH_ORDER)
+    latest_month = int(df["month_idx"].max())
+    df = df[df["month_idx"] == latest_month]
+
+    out = pd.DataFrame({
+        "fips": df["BENE_FIPS_CD"].astype(str).str.zfill(5),
+        "aged_benes": pd.to_numeric(df["AGED_TOT_BENES"],
+                                    errors="coerce"),
+    }).dropna()
+    out = out.groupby("fips", as_index=False)["aged_benes"].sum()
+    return out[out["fips"].str.len() == 5]
+
+
 def download_medicare_csv() -> Path:
     if CACHE.exists() and CACHE.stat().st_size > 100:
         return CACHE

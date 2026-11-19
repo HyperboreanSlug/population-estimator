@@ -24,8 +24,9 @@ def load_soi_summary() -> dict:
     if not SOI_FILE.exists():
         return {"error": "SOI file not downloaded. Run: popest download"}
 
-    df = pd.read_csv(SOI_FILE, usecols=["STATEFIPS", "zipcode", "N1", "N2"],
-                     dtype={"zipcode": str})
+    df = pd.read_csv(SOI_FILE, usecols=[
+        "STATEFIPS", "zipcode", "N1", "N2", "A02650"],
+        dtype={"zipcode": str})
     real = df[~df["zipcode"].isin(["00000", "99999"])].copy()
     total_returns = int(real["N1"].sum())
     total_exemptions = int(real["N2"].sum())
@@ -40,6 +41,26 @@ def load_soi_summary() -> dict:
         "zip_codes": n_zips,
         "source": "data/irs/soi_zip_2022.csv (fields N1, N2; "
                   "zipcode 00000/99999 excluded)",
+        "url": "https://www.irs.gov/pub/irs-soi/22zpallagi.csv",
+    }
+
+
+def load_soi_agi() -> dict:
+    """Total adjusted gross income from the SOI ZIP file.
+
+    Citation: data/irs/soi_zip_2022.csv, field A02650 (adjusted gross
+    income, thousands of dollars), zipcode 00000/99999 excluded.
+    """
+    if not SOI_FILE.exists():
+        return {}
+    df = pd.read_csv(SOI_FILE, usecols=["STATEFIPS", "zipcode", "A02650"],
+                     dtype={"zipcode": str})
+    real = df[~df["zipcode"].isin(["00000", "99999"])].copy()
+    agi_thousands = pd.to_numeric(real["A02650"], errors="coerce").sum()
+    return {
+        "year": 2022,
+        "total_agi": float(agi_thousands) * 1000.0,
+        "source": "data/irs/soi_zip_2022.csv (field A02650, thousands)",
         "url": "https://www.irs.gov/pub/irs-soi/22zpallagi.csv",
     }
 

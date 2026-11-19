@@ -22,15 +22,19 @@ METHOD_WEIGHTS = {
     "healthcare": 0.06,
     "housing": 0.07,
     "vitals": 0.05,
+    "vitals_deaths": 0.04,
     "buildings": 0.06,
     "snap": 0.03,
     "wireless": 0.03,
     "grocery": 0.03,
     "irs": 0.08,
+    "irs_agi": 0.04,
     "bls": 0.05,
     "education": 0.04,
     "sdwis": 0.06,
     "medicare": 0.04,
+    "total_energy": 0.03,
+    "gas_volume": 0.03,
 }
 
 CENSUS_WEIGHT_CAP = 0.15
@@ -39,8 +43,9 @@ CENSUS_WEIGHT_CAP = 0.15
 # (municipal plants that report mass-unit loads) is a reporting subset,
 # not a national total, so it is a coverage-limited lower bound.
 COUNTY_WEIGHTS = {
-    "water": 0.30,
-    "wastewater": 0.20,
+    "water": 0.35,
+    "wastewater": 0.25,
+    "medicare": 0.25,
     "housing": 0.20,
     "census": 0.15,
 }
