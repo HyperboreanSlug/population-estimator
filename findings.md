@@ -304,3 +304,17 @@ commit message, which was written from memory (354,161,842 was wrong). New voice
   (the Medicare county voice spans every county).
 - Correction caught by the rerun: the README's "400M breaks 14/31"
   was an unverified extrapolation; the actual count is 16/31. Fixed.
+
+## Operator weighting orders (2026-11-19, final revision)
+- Wastewater design capacity DEMOTED to reported-only: weight 0.0 in
+  METHOD_WEIGHTS and removed from COUNTY_WEIGHTS. Diagnosis: the field
+  is engineered capacity (growth + wet-weather headroom) implying 130
+  gal/p/d at the census count, outside 60-110; the measured
+  ACTUAL_AVERAGE_FLOW field covers only 1,972 of 30,121 facilities
+  (6.5%), so no honest replacement numerator exists. Six counties with
+  only wastewater coverage now show blank (3153 of 3159 covered).
+- Census weight RESTORED at the cap (0.15 of the 1.49 total; effective
+  share 10.1%).
+- Final ensemble: 338,272,455 (CI 326.3M-349.4M), ratio 0.995 vs PEP
+  2024. Reconciliation: census 4/31 outside, ensemble 4/31, 400M
+  16/31, 450M 25/31, 500M 29/31.

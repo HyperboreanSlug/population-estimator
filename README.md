@@ -5,9 +5,8 @@ granularity, using physical infrastructure as primary evidence.
 
 Water consumption, wastewater chemistry (nitrogen, ammonia, BOD), energy use,
 waste generation, food supply, and healthcare utilization reveal actual human
-presence independent of self-report surveys. Census data is comparison-only:
-since the operator-set weighting change of 2026-11-19 it carries zero ensemble
-weight. It never shifts the estimate.
+presence independent of self-report surveys. Census data carries a capped 15% ensemble weight (restored by operator
+order 2026-11-19); the wastewater design-capacity voice is reported-only.
 
 See [PLAN.md](PLAN.md) for full methodology, data sources, and per-capita
 calibration constants. [SOURCE.md](SOURCE.md) documents every module.
@@ -54,45 +53,47 @@ All written to `output/` by `popest run`:
   level vs. its published range
 - `summary.txt` — human-readable report
 
-## Results (run of 2026-11-19, 31 national voices, census weight 0)
+## Results (run of 2026-11-19, 31 voices, wastewater capacity reported-only, census restored at the cap)
 
 | Metric | Value |
 |--------|-------|
-| Ensemble central | 357,139,690 |
-| Bootstrap 90% CI (1000 draws) | 337,084,257 - 374,925,466 |
-| Census PEP 2024 (comparison only) | 340,110,988 |
-| Ratio to census PEP | 1.050 |
-| Census decennial 2020 (comparison only) | 331,449,281 |
+| Ensemble central | 338,272,455 |
+| Bootstrap 90% CI (1000 draws) | 326,261,975 - 349,372,068 |
+| Census PEP 2024 | 340,110,988 |
+| Ratio to census PEP | 0.995 |
+| Census decennial 2020 | 331,449,281 |
 
-The census carries **zero ensemble weight** (operator-set 2026-11-19):
-it is fetched, reported, and used as the reconciliation reference, but
-it never shifts the estimate. Method contributions (central, weight,
-data):
+Two operator-set policies (2026-11-19): the wastewater DESIGN-CAPACITY
+voice is demoted to reported-only (weight 0; it is engineered capacity,
+implying 130 gal/person/day at the census count, outside the published
+60-110 range, and the measured actual-flow field covers only 6.5% of
+plants), and the census voice is restored at its capped weight.
+Method contributions (central, weight, data):
 
 | Method | Central | Weight | Data |
 |--------|---------|--------|------|
-| Wastewater design flow | 553.7M | 0.088 | EPA ICIS-NPDES permits |
+| Wastewater design capacity (REPORTED, w=0) | 553.7M | 0.000 | EPA NPDES design flows (capacity) |
 | Vehicles | 427.5M | 0.027 | FHWA registrations 2022 |
-| Water systems served | 390.5M | 0.041 | EPA SDWIS: 331.9M active CWS |
+| Water systems served | 390.5M | 0.040 | EPA SDWIS: 331.9M active CWS |
 | Medicare aged | 388.4M | 0.027 | CMS 2026-07: 64.04M aged |
-| Water budget | 356.2M | 0.109 | USGS 2015, 3,142 counties |
-| Energy | 353.1M | 0.041 | EIA SEDS kWh 2024 |
+| Water budget | 356.2M | 0.107 | USGS 2015, 3,142 counties |
+| Energy | 353.1M | 0.040 | EIA SEDS kWh 2024 |
 | BLS employment | 352.5M | 0.034 | BLS API |
 | Transit trips | 348.6M | 0.007 | NTD 2024: 7.67B trips |
-| Air enplanements | 347.5M | 0.014 | FAA CY2025: 973M |
+| Air enplanements | 347.5M | 0.013 | FAA CY2025: 973M |
 | Electricity meters | 343.5M | 0.020 | EIA-861: 143.1M meters |
 | Licensed drivers | 341.6M | 0.020 | FHWA DL-1C: 239.8M drivers |
 | Grocery stores | 341.2M | 0.020 | Census MARTS 2025: $1.007T |
-| BEA income | 341.1M | 0.014 | BEA 2024: $24.90T |
-| Census PEP 2024 (comparison) | 340.1M | 0.000 | PEP 2024 |
-| College enrollment | 340.0M | 0.014 | IPEDS 2023: 19.04M |
+| BEA income | 341.1M | 0.013 | BEA 2024: $24.90T |
+| Census PEP 2024 (capped voice) | 340.1M | 0.101 | PEP 2024 |
+| College enrollment | 340.0M | 0.013 | IPEDS 2023: 19.04M |
 | SNAP | 339.9M | 0.020 | FNS FY2025: 42.14M |
 | Gasoline | 339.7M | 0.027 | EIA supplied |
 | Total energy | 339.7M | 0.020 | EIA 2025: 96.5 quad |
 | VMT | 339.6M | 0.020 | FHWA 2024: 3.294T miles |
-| Food expenditure | 339.4M | 0.014 | ERS 2025: $2.51T |
-| Hospital inpatient days | 339.3M | 0.014 | CMS FY2021: 190.0M days |
-| Medicaid+CHIP | 339.3M | 0.014 | CMS 2026-07: 72.95M |
+| Food expenditure | 339.4M | 0.013 | ERS 2025: $2.51T |
+| Hospital inpatient days | 339.3M | 0.013 | CMS FY2021: 190.0M days |
+| Medicaid+CHIP | 339.3M | 0.013 | CMS 2026-07: 72.95M |
 | K-12 enrollment | 337.2M | 0.027 | NCES 2024-25: 49.57M |
 | Gas volume | 335.0M | 0.020 | EIA 2024: 4,389 Bcf |
 | Library visits | 334.7M | 0.007 | IMLS FY2023: 803M |
@@ -100,15 +101,15 @@ data):
 | IRS AGI | 328.3M | 0.027 | SOI TY2022: $14.61T |
 | Births | 327.8M | 0.034 | PEP 2024: 3,605,563 births |
 | MSW | 327.0M | 0.034 | EPA 2018 |
-| Healthcare (ER) | 325.0M | 0.041 | CDC NCHS 2021 |
+| Healthcare (ER) | 325.0M | 0.040 | CDC NCHS 2021 |
 | IRS exemptions | 323.1M | 0.054 | SOI TY2022: 284.3M |
-| Housing | 321.3M | 0.048 | census 2020 units |
-| Gas customers | 313.3M | 0.014 | EIA 2024: 73.7M |
+| Housing | 321.3M | 0.047 | census 2020 units |
+| Gas customers | 313.3M | 0.013 | EIA 2024: 73.7M |
 | Deaths | 308.7M | 0.027 | PEP 2024: 3,086,925 deaths |
-| Buildings | 209.3M | 0.041 | MS footprints (approximated) |
+| Buildings | 209.3M | 0.040 | MS footprints (approximated) |
 
 | Census PEP 2024 (340.1M) | 27 of 31 fit |
-| Ensemble (357.1M) | 5 of 31 outside published range |
+| Ensemble (338.3M) | 27 of 31 fit |
 | 400M | 16 of 31 outside published range |
 | 450M | 25 of 31 outside published range |
 | 500M | 29 of 31 outside published range |
@@ -134,12 +135,15 @@ behavioral voices (transit, libraries). Every other measured total
 would need its per-capita rate to be wrong by 15-45% in the same
 direction simultaneously. At 500M only two survive.
 
-Four voices sit meaningfully above census: utility-reported
+Three weighted voices sit meaningfully above census: utility-reported
 community-water population served (378-405M), Medicare aged
-beneficiaries (357-426M), vehicle registrations (363-485M), and
-wastewater design capacity (403-738M). The bootstrap 90% CI of the full
-census-free ensemble is 337-375M. The measured evidence does not
-support 450M+; it clusters between the census count and roughly 375M.
+beneficiaries (357-426M), and vehicle registrations (363-485M). The
+wastewater design capacity (403-738M) is reported-only: it is
+engineered capacity, and at the census count it already requires
+130 gal/person/day, outside the published 60-110 range. The bootstrap
+90% CI of the ensemble is 326-349M. The measured evidence does not
+support 450M+; with the capacity figure demoted, the estimate clusters
+at the census count itself.
 
 ## Method status (data honesty)
 

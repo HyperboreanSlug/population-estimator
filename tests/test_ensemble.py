@@ -14,14 +14,21 @@ from popest.ensemble import (
 from popest.uncertainty import bootstrap_national
 
 
-def test_combine_national_weights_and_census_zero():
-    """Operator order 2026-11-19: census weight is zero, comparison only."""
+def test_combine_national_weights_and_census_cap():
     estimates = {"water": 400.0, "energy": 200.0}
     result = combine_national(estimates, census=100.0)
-    expected = (400 * 0.16 + 200 * 0.06) / 0.22
+    census_w = min(CENSUS_WEIGHT_CAP, 1.0 - 0.22)
+    expected = (400 * 0.16 + 200 * 0.06 + 100 * census_w) / (0.22 + census_w)
     assert result["combined"] == pytest.approx(expected)
-    assert result["contributions"]["census"]["weight"] == 0.0
-    assert result["contributions"]["census"]["weighted_share"] == 0.0
+    assert result["contributions"]["census"]["weight"] == pytest.approx(census_w)
+
+
+def test_combine_national_demoted_voice_carries_zero_weight():
+    result = combine_national({"wastewater": 553.7, "water": 356.2},
+                              census=None)
+    # wastewater weight is 0.0 in METHOD_WEIGHTS (demoted)
+    assert result["contributions"]["wastewater"]["weighted_share"] == 0.0
+    assert result["combined"] == pytest.approx(356.2)
 
 
 def test_combine_national_skips_zero_and_none_census():
@@ -50,16 +57,16 @@ def test_combine_county_renormalizes_missing_methods():
     out = combine_county({"water": water, "wastewater": ww}, census)
 
     r1 = out[out["fips"] == "01001"].iloc[0]
-    # census carries no weight: water .35 + ww .25 = .60
-    expected1 = (100 * 0.35 + 200 * 0.25) / 0.60
+    # census is weighted in the county ensemble; wastewater is demoted
+    expected1 = (100 * 0.35 + 90 * 0.15) / 0.50
     assert r1["ensemble_pop"] == pytest.approx(expected1)
     assert r1["n_methods"] == 2
 
     r3 = out[out["fips"] == "01003"].iloc[0]
-    # water only; census present but weightless
-    assert r3["ensemble_pop"] == pytest.approx(50.0)
-    assert r3["n_methods"] == 1
-    assert r3["ensemble_low"] == pytest.approx(40.0)
+    assert r3["ensemble_pop"] == pytest.approx(
+        (50 * 0.35 + 45 * 0.15) / 0.50)
+    assert r3["n_methods"] == 2
+    assert r3["ensemble_low"] == pytest.approx((40 * 0.35 + 45 * 0.15) / 0.50)
 
     # contributions sum to 1 where methods exist
     contribs = [c for c in out.columns if c.startswith("contrib_")]
@@ -129,16 +136,14 @@ def test_bootstrap_deterministic_with_seed():
     assert a == b
 
 
-def test_bootstrap_census_does_not_shift_combined():
-    """Census weight is zero: the bootstrap is unaffected by the census."""
+def test_bootstrap_census_shifts_combined_toward_census():
     methods = {
         "water": {"central": 500.0, "low": 400.0, "high": 600.0,
                   "form": "inverse"},
     }
     with_census = bootstrap_national(methods, census=100.0, n_draws=4000, seed=5)
     without = bootstrap_national(methods, census=0.0, n_draws=4000, seed=5)
-    assert with_census["combined"] == pytest.approx(
-        without["combined"], rel=1e-12)
+    assert with_census["combined"] < without["combined"]
 
 
 def test_discrepancy_report_values():

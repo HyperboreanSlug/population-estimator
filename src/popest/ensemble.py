@@ -12,8 +12,10 @@ import numpy as np
 import pandas as pd
 
 METHOD_WEIGHTS = {
+    # wastewater design capacity: demoted to REPORTED-ONLY, weight 0
+    # (operator order 2026-11-19; see the note above the county weights)
+    "wastewater": 0.0,
     "water": 0.16,
-    "wastewater": 0.13,
     "energy": 0.06,
     "msw": 0.05,
     "gasoline": 0.04,
@@ -50,21 +52,24 @@ METHOD_WEIGHTS = {
 
 CENSUS_WEIGHT_CAP = 0.15
 
-# Operator order 2026-11-19: the census carries ZERO ensemble weight.
-# It is comparison-only: still fetched, reported, and shown in the
-# method table with w=0.000, but it never shifts the estimate. This
-# single switch governs the national combine, the bootstrap, and the
-# county ensemble.
-CENSUS_WEIGHT = 0.0
+# Operator order 2026-11-19 (second revision):
+# - The wastewater DESIGN-CAPACITY voice is demoted to REPORTED-ONLY
+#   (weight 0). It is computed and printed as an audit trail, but it
+#   never shifts the estimate: design flow is engineered capacity
+#   (growth headroom + wet-weather peaks), and it implies 130
+#   gal/person/day at the census count, outside the published 60-110
+#   range. The measured actual-flow field covers only 6.5% of plants,
+#   so there is no honest replacement numerator.
+# - The census voice is RESTORED to the capped weight.
 
 # wastewater_chem is REPORTED but never ensemble-weighted: its numerator
 # (municipal plants that report mass-unit loads) is a reporting subset,
 # not a national total, so it is a coverage-limited lower bound.
 COUNTY_WEIGHTS = {
     "water": 0.35,
-    "wastewater": 0.25,
     "medicare": 0.25,
     "housing": 0.20,
+    "census": 0.15,
 }
 
 
@@ -84,11 +89,11 @@ def combine_national(estimates: dict[str, float],
         contributions[method] = {"value": value, "weight": w}
 
     if census and census > 0:
-        from popest.ensemble import CENSUS_WEIGHT
-
-        weighted_sum += census * CENSUS_WEIGHT
-        total_weight += CENSUS_WEIGHT
-        contributions["census"] = {"value": census, "weight": CENSUS_WEIGHT}
+        census_w = (min(CENSUS_WEIGHT_CAP, 1.0 - total_weight)
+                    if total_weight < 1.0 else CENSUS_WEIGHT_CAP)
+        weighted_sum += census * census_w
+        total_weight += census_w
+        contributions["census"] = {"value": census, "weight": census_w}
 
     if total_weight == 0:
         return {"combined": 0.0, "total_weight": 0.0, "contributions": {}}

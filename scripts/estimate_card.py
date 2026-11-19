@@ -184,7 +184,7 @@ def render():
   <div class="head">
     <div class="kicker">Population Estimator · Physical Evidence Ensemble</div>
     <h1>United States Estimated Population</h1>
-    <div class="sub">31 measured national sources · 4 county-level voices · census excluded from weighting (comparison only)</div>
+    <div class="sub">31 measured national sources · 4 county-level voices · census capped at 15% · wastewater design capacity reported-only</div>
   </div>
   <div class="grid">
     <div class="left">
@@ -243,7 +243,7 @@ def render():
     </div>
   </div>
   <div class="foot">
-    <span>Physical evidence only: water, wastewater, energy, fuel, meters, admin counts · census weight 0 (operator-set)</span>
+    <span>Physical evidence primary · census capped 15% · wastewater design capacity reported-only</span>
     <span>generated from output/summary.txt · scripts/estimate_card.py</span>
   </div>
 </div></body></html>'''

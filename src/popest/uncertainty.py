@@ -69,11 +69,13 @@ def bootstrap_national(methods: dict[str, dict], census: float,
 
     weighted = draws * weights
     wsum = weights.sum()
-    from popest.ensemble import CENSUS_WEIGHT
+    if census > 0:
+        from popest.ensemble import CENSUS_WEIGHT_CAP
 
-    if census > 0 and CENSUS_WEIGHT > 0:
-        weighted = weighted.sum(axis=1) + census * CENSUS_WEIGHT
-        wsum = wsum + CENSUS_WEIGHT
+        census_w = (min(CENSUS_WEIGHT_CAP, 1.0 - wsum)
+                    if wsum < 1.0 else CENSUS_WEIGHT_CAP)
+        weighted = weighted.sum(axis=1) + census * census_w
+        wsum = wsum + census_w
     else:
         weighted = weighted.sum(axis=1)
 

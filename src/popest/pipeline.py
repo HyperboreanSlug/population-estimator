@@ -62,8 +62,15 @@ def run(year: int = 2024, api_key: str | None = None) -> dict:
         methods["wastewater"] = {
             "central": wws["central"], "low": wws["low"],
             "high": wws["high"], "form": "inverse",
-            "source": "EPA ICIS-NPDES design flows",
+            "source": "EPA ICIS-NPDES design flows (capacity)",
         }
+        notes.append(
+            "wastewater DESIGN-CAPACITY voice REPORTED, not weighted "
+            "(operator order 2026-11-19): design flow is engineered "
+            "capacity (growth + wet-weather headroom) implying 130 "
+            "gal/person/day at the census count, outside the published "
+            "60-110 range; the measured actual-flow field covers only "
+            "6.5% of plants, so no honest replacement numerator exists.")
         ww = ww.rename(columns={
             "pop_ww_central": "pop_wastewater_central",
             "pop_ww_low": "pop_wastewater_low",
