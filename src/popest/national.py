@@ -224,6 +224,22 @@ def library_visits() -> dict:
                       f"{r['registered_borrowers_reported']:,.0f} reported"}
 
 
+def personal_income() -> dict:
+    """Population from BEA total personal income."""
+    from popest.bea import national_personal_income
+    from popest.constants import PER_CAPITA_INCOME
+
+    r = national_personal_income()
+    if not r:
+        return {}
+    return {"central": r["total_income"] / PER_CAPITA_INCOME.central,
+            "low": r["total_income"] / PER_CAPITA_INCOME.high,
+            "high": r["total_income"] / PER_CAPITA_INCOME.low,
+            "form": "inverse",
+            "source": f"BEA personal income {r['year']} "
+                      f"(${r['total_income']/1e12:.2f}T)"}
+
+
 def food_expenditure() -> dict:
     """Population from USDA ERS total food expenditure."""
     from popest.constants import FOOD_EXPENDITURE_PER_CAPITA
@@ -347,6 +363,7 @@ def collect_all(methods: dict) -> None:
     add_national(methods, "transit", transit)
     add_national(methods, "library_visits", library_visits)
     add_national(methods, "food_expenditure", food_expenditure)
+    add_national(methods, "personal_income", personal_income)
     add_national(methods, "sdwis", sdwis)
     add_national(methods, "medicare", medicare)
     add_national(methods, "total_energy", total_energy)

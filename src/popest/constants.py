@@ -275,6 +275,17 @@ LIBRARY_VISITS_PER_CAPITA = PerCapitaConstant(
            "denominator; wide local variance.",
 )
 
+PER_CAPITA_INCOME = PerCapitaConstant(
+    central=73000.0,
+    low=62000.0,
+    high=85000.0,
+    unit="dollars/person/year",
+    source="BEA per-capita personal income ~$73,204 (2024, file "
+           "LineCode 3). BEA divides by census-based population, so "
+           "this constant is census-informed; the income total is "
+           "measured. Census-informed denominator voice.",
+)
+
 GAL_PER_MGAL = 1_000_000.0
 GRAMS_PER_LB = 453.592
 MGD_TO_GAL_DAY = 1_000_000.0

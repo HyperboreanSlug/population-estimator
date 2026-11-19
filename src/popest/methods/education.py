@@ -62,4 +62,8 @@ def reported_only() -> dict:
     wic = wic_participation()
     if wic:
         out[f"WIC FY{wic['year']} total participants"] = wic["value"]
+    sb = school_breakfast()
+    if sb:
+        out[f"School Breakfast FY{sb['year']} total participation (M)"] = \
+            sb["participation_millions"]
     return out

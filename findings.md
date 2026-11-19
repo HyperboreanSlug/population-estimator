@@ -231,3 +231,13 @@ commit message, which was written from memory (354,161,842 was wrong). New voice
   irs_agi 328.3M, total energy 339.7M, gas volume 335.0M, deaths 308.7M.
 - Reconciliation now 27 constants: census 4/27 outside, 450M 21/27,
   500M 25/27.
+
+## Final wiring batch part 1 (2026-11-19)
+- BEA CAINC1: US row personal income 2024 $24.90T; per-capita constant
+  73k (62k-85k); voice 341.1M. BEA's own population column reads
+  340,110,988 (census denominator confirmed in-file; flagged).
+- School Breakfast FY series added as a reported voice.
+- bea.py strip typo caught by direct debug after the fail-soft step
+  silently absorbed it.
+- Ensemble 356,214,375 (CI 337.4M-371.9M), ratio 1.047; reconciliation
+  28 constants: 450M 22/28, 500M 26/28.

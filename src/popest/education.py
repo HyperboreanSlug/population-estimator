@@ -19,6 +19,37 @@ import pandas as pd
 NCES_ZIP = Path("data/nces/ccd_sea_052_2425.zip")
 NSLP_XLSX = Path("data/usda/nslp_fy_participation.xlsx")
 WIC_XLSX = Path("data/usda/wic_monthly.xlsx")
+SB_XLSX = Path("data/usda/school_breakfast_summary.xlsx")
+
+
+def school_breakfast() -> dict:
+    """School Breakfast Program total participation (millions, FY).
+
+    Source: data/usda/school_breakfast_summary.xlsx (header row 2,
+    'Total Participation' column, values in millions).
+    """
+    if not SB_XLSX.exists():
+        return {}
+    df = pd.read_excel(SB_XLSX, header=2)
+    df = df.rename(columns=lambda c: str(c).strip())
+    part_col = next((c for c in df.columns
+                    if c.lower().startswith("total\nparticipation")
+                    or "total participation" in c.lower().replace("\n", " ")),
+                    None)
+    fy_col = df.columns[0]
+    if part_col is None:
+        return {}
+    work = df[[fy_col, part_col]].copy()
+    work[fy_col] = work[fy_col].astype(str).str.replace(
+        "\xa0", "", regex=False).str.strip()
+    work[part_col] = pd.to_numeric(work[part_col], errors="coerce")
+    work = work[work[fy_col].str.match(r"^\d{4}$")].dropna(subset=[part_col])
+    if work.empty:
+        return {}
+    latest = work.iloc[-1]
+    return {"year": int(latest[fy_col]),
+            "participation_millions": float(latest[part_col]),
+            "source": "data/usda/school_breakfast_summary.xlsx"}
 
 
 def public_enrollment() -> pd.DataFrame:
