@@ -266,3 +266,29 @@ commit message, which was written from memory (354,161,842 was wrong). New voice
   exist; USPS revenue-pieces-weight pages are 403 bot-walled.
 - Ensemble 355,974,550 (CI 338.0M-370.4M), ratio 1.047; reconciliation
   29 constants: 450M 23/29, 500M 27/29.
+
+## VPS batch (2026-11-19, operator-authorized ssh)
+- Medicaid+CHIP enrollment: pi-dataset-october-2026-release.csv (4.5MB)
+  fetched via VPS, dlgate PASS (report ff5f49d7...). 202607, 51
+  jurisdictions: Medicaid+CHIP 72,946,510 (Medicaid 65,742,057, CHIP
+  7,204,453) - matches the sweep's computation exactly. Voice 339.3M
+  via enrollment share 0.215 (0.19-0.24).
+- Medicaid State Drug Utilization 2025: sdud2025 (508MB) fetched,
+  dlgate PASS (report 1345e02e...). FFSU reimbursed prescriptions:
+  596,276,318. REPORTED voice (per-enrollee ~8.2 Rx/yr with the
+  enrollment file); not weighted - the three-constant chain
+  (Rx/enrollee x enrollment share) compounds census-informed
+  denominators too widely.
+- CMS Hospital Provider Cost Report FY2021 Final (4.1MB summary
+  sheet, dlgate PASS report 9ad1c365...): 6,058 hospitals,
+  190,021,512 inpatient days, 32,244,671 discharges, 801,522 beds.
+  hospital_days voice 339.3M via 0.56 (0.48-0.65) days/person; FY2021
+  COVID-depression and Medicare-certified-beds caveats in the source
+  label; discharges reported alongside.
+- SSA OASDI: DEAD END from the operator's entire infrastructure -
+  Akamai 403 from both the workstation and the VPS (every statcomps,
+  oact/STATS path, xlsx and HTML). The data are public but reachable
+  only from a non-datacenter network or a manual download.
+- Final: 31 national voices + 4 county voices. Ensemble 355,562,959
+  (CI 337.4M-371.7M), ratio 1.045. Reconciliation 31 constants:
+  census fits 27/31, 450M breaks 25/31, 500M breaks 29/31.

@@ -230,6 +230,12 @@ def run(year: int = 2024, api_key: str | None = None) -> dict:
     step("Licensed drivers (FHWA DL-1C)...")
     national.add_national(methods, "drivers", national.drivers)
 
+    step("Medicaid+CHIP enrollment (CMS state data)...")
+    national.add_national(methods, "medicaid", national.medicaid)
+
+    step("Hospital inpatient days (CMS cost report)...")
+    national.add_national(methods, "hospital_days", national.hospital_days)
+
     step("Water systems (EPA SDWIS CWS served)...")
     national.add_national(methods, "sdwis", national.sdwis)
 
@@ -259,6 +265,29 @@ def run(year: int = 2024, api_key: str | None = None) -> dict:
         print(f"  Medicare county voice FAILED: {e}")
 
     # --- reported-only voices (never ensemble-weighted) ----------------
+    try:
+        from pathlib import Path as _P
+        import pandas as _pd
+
+        sdud = _P("data/medicaid/sdud2025.csv")
+        if sdud.exists():
+            df = _pd.read_csv(sdud, usecols=["Utilization Type",
+                                              "Number of Prescriptions"],
+                              low_memory=False)
+            rx = df[df["Utilization Type"].str.strip() == "FFSU"]
+            rx_total = float(rx["Number of Prescriptions"].sum())
+            from popest.medicaid import medicaid_chip_enrollment
+
+            med = medicaid_chip_enrollment()
+            per_enrollee = (rx_total / med["medicaid_chip"]
+                            if med else None)
+            note = (f"Medicaid reimbursed prescriptions FY2025 "
+                    f"(REPORTED): {rx_total:,.0f}")
+            if per_enrollee:
+                note += f"; ~{per_enrollee:.1f} per enrollee/yr"
+            notes.append(note)
+    except Exception as e:
+        print(f"  SDUD reported voice FAILED: {e}")
     try:
         from popest.waste import lmop_landfill_acceptance
 

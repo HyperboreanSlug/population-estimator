@@ -53,14 +53,14 @@ All written to `output/` by `popest run`:
   level vs. its published range
 - `summary.txt` — human-readable report
 
-## Results (run of 2026-11-19, 27 national voices, all data downloaded)
+## Results (run of 2026-11-19, 31 national voices, all reachable data downloaded)
 
 | Metric | Value |
 |--------|-------|
-| Ensemble central | 356,412,430 |
-| Bootstrap 90% CI (1000 draws) | 338,309,544 - 370,330,839 |
+| Ensemble central | 355,562,959 |
+| Bootstrap 90% CI (1000 draws) | 337,364,510 - 371,701,903 |
 | Census PEP 2024 | 340,110,988 |
-| Ratio to census PEP | 1.048 |
+| Ratio to census PEP | 1.045 |
 | Census decennial 2020 | 331,449,281 |
 
 Method contributions (central, weight, data):
@@ -71,20 +71,24 @@ Method contributions (central, weight, data):
 | Vehicles | 427.5M | 0.03 | FHWA registrations 2022 |
 | Water systems served | 390.5M | 0.04 | EPA SDWIS: 331.9M utility-reported, active CWS |
 | Medicare aged | 388.4M | 0.03 | CMS July 2026: 64.04M aged beneficiaries |
-| Water budget | 356.2M | 0.11 | USGS 2015, 3,142 counties |
+| Water budget | 356.2M | 0.10 | USGS 2015, 3,142 counties |
 | Energy | 353.1M | 0.04 | EIA SEDS residential kWh 2024 |
 | BLS employment | 352.5M | 0.03 | BLS API |
 | Transit trips | 348.6M | 0.01 | NTD 2024: 7.67B unlinked trips |
 | Air enplanements | 347.5M | 0.01 | FAA CY2025: 973M boardings |
+| Licensed drivers | 341.6M | 0.02 | FHWA DL-1C 2024: 239.8M drivers |
 | Electricity meters | 343.5M | 0.02 | EIA-861: 143.1M meters (Bundled+Delivery) |
-| Census PEP 2024 | 340.1M | 0.10 | capped comparison voice |
+| Grocery stores | 341.2M | 0.02 | Census MARTS 2025: $1.007T (NAICS 445) |
+| BEA income | 341.1M | 0.02 | BEA 2024: $24.90T personal income |
 | College enrollment | 340.0M | 0.01 | IPEDS 2023: 19.04M students |
+| Hospital inpatient days | 339.3M | 0.01 | CMS cost report FY2021: 190.0M days |
+| Medicaid+CHIP | 339.3M | 0.01 | CMS 2026-07: 72.95M enrolled |
+| Census PEP 2024 | 340.1M | 0.09 | capped comparison voice |
 | SNAP | 339.9M | 0.02 | USDA FNS FY2025: 42.14M participants |
 | Gasoline | 339.7M | 0.03 | EIA product supplied |
 | Total energy | 339.7M | 0.02 | EIA 2025: 96.5 quad Btu |
 | VMT | 339.6M | 0.02 | FHWA 2024: 3.294T miles |
 | Food expenditure | 339.4M | 0.01 | ERS 2025: $2.51T all purchasers |
-| Grocery | 339.3M | 0.02 | census retail 2023 |
 | K-12 enrollment | 337.2M | 0.03 | NCES 2024-25: 49.57M students |
 | Gas volume | 335.0M | 0.02 | EIA 2024: 4,389 Bcf |
 | Library visits | 334.7M | 0.01 | IMLS FY2023: 803M visits |
@@ -94,7 +98,7 @@ Method contributions (central, weight, data):
 | MSW | 327.0M | 0.03 | EPA 2018 |
 | Healthcare (ER) | 325.0M | 0.04 | CDC NCHS 2021 |
 | IRS exemptions | 323.1M | 0.05 | IRS SOI TY2022: 284.3M |
-| Housing | 321.3M | 0.05 | census 2020 housing units |
+| Housing | 321.3M | 0.04 | census 2020 housing units |
 | Gas customers | 313.3M | 0.01 | EIA 2024: 73.7M gas meters |
 | Deaths | 308.7M | 0.03 | PEP 2024: 3,086,925 (NCHS-derived) |
 | Buildings | 209.3M | 0.04 | MS footprints (approximated ratios) |
@@ -119,11 +123,11 @@ the constant's published range (`output/reconciliation.csv`):
 
 | Claimed population | Constants outside published range |
 |---|---|
-| Census PEP 2024 (340.1M) | 4 of 27 |
-| Ensemble (356.4M) | 5 of 27 |
-| 400M | 13 of 27 |
-| 450M | 21 of 27 |
-| 500M | 25 of 27 |
+| Census PEP 2024 (340.1M) | 4 of 31 |
+| Ensemble (355.6M) | 5 of 31 |
+| 400M | 14 of 31 |
+| 450M | 25 of 31 |
+| 500M | 29 of 31 |
 
 At 450M only six measured totals stay inside their published ranges:
 total water withdrawals, vehicle registrations, wastewater design
@@ -140,7 +144,7 @@ Four voices sit meaningfully above census: utility-reported
 community-water population served (378-405M), Medicare aged
 beneficiaries (357-426M), vehicle registrations (363-485M), and
 wastewater design capacity (403-738M). The bootstrap 90% CI of the full
-ensemble is 338-370M. The measured evidence does not support 450M+; it
+ensemble is 337-372M. The measured evidence does not support 450M+; it
 clusters between the census count and roughly 370M.
 
 ## Method status (data honesty)
@@ -149,32 +153,43 @@ Runs on downloaded real data: water (USGS), wastewater design flow (EPA
 NPDES), wastewater chemistry (EPA DMR), energy (EIA SEDS), total primary
 energy (EIA MER), natural gas volume and customer counts (EIA), VMT and
 registrations (FHWA), electricity meters (EIA-861, Bundled+Delivery),
-IRS exemptions and AGI (SOI CSV), BLS (API), MSW and gasoline (EPA/EIA
-pages), SNAP (USDA FNS annual summary), K-12 enrollment (NCES CCD),
-college enrollment (NCES Digest 303.10), water systems (EPA SDWIS),
-Medicare aged enrollment (CMS Monthly Enrollment CSV, July 2026, county
-rows included), births and deaths (Census PEP NCHS-derived columns),
-transit trips (NTD via data.transportation.gov), enplanements (FAA),
-food expenditure (USDA ERS), library visits (IMLS PLS), census PEP
-(bulk CSV). The CMS file was fetched through an operator-authorized SSH
-proxy to a VPS because the local resolver blocks cms.gov; it passed the
-machine's ClamAV download gate before use, and the client also supports
+licensed drivers (FHWA DL-1C), IRS exemptions and AGI (SOI CSV), BLS
+(API), MSW and gasoline (EPA/EIA pages), SNAP (USDA FNS annual summary),
+K-12 enrollment (NCES CCD), college enrollment (NCES Digest 303.10),
+water systems (EPA SDWIS), Medicare aged enrollment (CMS Monthly
+Enrollment CSV, July 2026, county rows included), Medicaid+CHIP
+enrollment (CMS state data, 2026-07), hospital inpatient days (CMS
+Hospital Provider Cost Report FY2021), births and deaths (Census PEP
+NCHS-derived columns), transit trips (NTD via data.transportation.gov),
+enplanements (FAA), food expenditure (USDA ERS), grocery (census MARTS
+NAICS 445), personal income (BEA CAINC1), library visits (IMLS PLS),
+census PEP (bulk CSV). The CMS/Medicaid files were fetched through an
+operator-authorized SSH proxy to a VPS because the local resolver's
+DNSSEC validation fails for cms.gov and medicaid.gov; each passed the
+machine's ClamAV download gate before use, and the clients also support
 `POP_EST_SOCKS_PROXY` as an alternative route.
 
 Uses published national constants where bulk data is blocked or
-unpublished: healthcare totals (CDC NCHS/AHRQ), wireless (CTIA survey —
+unpublished: healthcare ER totals (CDC NCHS/AHRQ), wireless (CTIA survey —
 verified that no FCC bulk dataset of subscriptions exists; the counts
-are CTIA-proprietary), grocery (census retail), vehicles numerator (FHWA
-MV-1 2022), buildings (footprint counts verified for 5 states, national
-total and ratios approximated and marked `APPROXIMATED` in the code).
+are CTIA-proprietary), vehicles numerator (FHWA MV-1 2022), buildings
+(footprint counts verified for 5 states, national total and ratios
+approximated and marked `APPROXIMATED` in the code).
 
-Unavailable (fail-soft, reason printed): SSA OASDI (403 to this network
-on every statcomps path), USFWS license reports (origin dead, HTTP 530),
-HUD USPS delivery points (registration-gated), BEA PCE (bulk tree
-replaced by a JS app shell; the level needs an API key), CWNS 2022
-facility data (SSO-gated), ERS total-calorie food series (ends 2010 and
-is per-capita, i.e. census-denominated and circular), TTB alcohol (CSVs
-fetched; units not stated in file, so reported raw, not converted).
+Unavailable (fail-soft, reason printed): SSA OASDI (Akamai 403 from
+both the workstation and the VPS — public data behind datacenter-IP
+blocking), USFWS license reports (origin dead, HTTP 530), HUD USPS
+delivery points (registration-gated), BEA PCE levels (bulk tree
+replaced by a JS app shell; the level needs an API key), FCC Form 477
+fixed broadband (DNS block + Akamai 403; fixed series ended June 2020),
+CWNS 2022 facility data (SSO-gated), PRC postal volume (PDF-only),
+TSA throughput (HTML-only), ERS total-calorie food series (ends 2010
+and is per-capita, i.e. census-denominated and circular), TTB alcohol
+(CSVs fetched; units not stated in file, so reported raw, not
+converted). Medicaid reimbursed prescriptions (FY2025: 596.3M) and
+hospital discharges (FY2021: 32.2M) are reported but not
+ensemble-weighted: their per-capita chains stack multiple
+census-informed denominators.
 
 ## Known limitations
 

@@ -44,3 +44,9 @@
   files. Ensemble 356,412,430 (CI 338.3M-370.3M), ratio 1.048.
   Reconciliation: 27 constants; 450M breaks 21, 500M breaks 25. All
   committed and pushed.
+- VPS batch complete: Medicaid enrollment voice (72.95M -> 339.3M),
+  hospital inpatient days voice (190.0M -> 339.3M), SDUD prescriptions
+  reported (596.3M Rx). SSA blocked from workstation AND VPS
+  (datacenter-IP 403). Final: 31 voices, ensemble 355,562,959 (CI
+  337.4M-371.7M), ratio 1.045; reconciliation 31 constants, 450M
+  breaks 25/31, 500M breaks 29/31. All pushed.

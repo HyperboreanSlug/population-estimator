@@ -44,6 +44,8 @@ METHOD_WEIGHTS = {
     "food_expenditure": 0.02,
     "personal_income": 0.02,
     "drivers": 0.03,
+    "medicaid": 0.02,
+    "hospital_days": 0.02,
 }
 
 CENSUS_WEIGHT_CAP = 0.15

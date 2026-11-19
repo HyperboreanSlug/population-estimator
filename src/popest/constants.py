@@ -294,6 +294,27 @@ ADULT_SHARE = PerCapitaConstant(
            "census-informed denominator.",
 )
 
+MEDICAID_ENROLLMENT_SHARE = PerCapitaConstant(
+    central=0.215,
+    low=0.19,
+    high=0.24,
+    unit="fraction of population",
+    source="Medicaid+CHIP enrollment share of population (KFF: ~21-22% "
+           "in recent years; 72.9M/340M = 21.4% at the latest period). "
+           "Census-informed denominator; administrative count.",
+)
+
+INPATIENT_DAYS_PER_CAPITA = PerCapitaConstant(
+    central=0.56,
+    low=0.48,
+    high=0.65,
+    unit="inpatient days/person/year",
+    source="Total hospital inpatient days per capita (AHA-era ~190-200M "
+           "days/yr). FY2021 cost-report data is COVID-depressed; range "
+           "widened accordingly. Medicare-certified beds only; constant "
+           "absorbs VA/military/IHS utilization.",
+)
+
 PER_CAPITA_INCOME = PerCapitaConstant(
     central=73000.0,
     low=62000.0,

@@ -150,6 +150,18 @@ def gather_totals() -> dict:
     if drv:
         totals["drivers"] = drv["drivers"]
 
+    from popest.medicaid import medicaid_chip_enrollment
+
+    med = medicaid_chip_enrollment()
+    if med:
+        totals["medicaid_enrolled"] = med["medicaid_chip"]
+
+    from popest.healthcare import hospital_cost_report
+
+    hcr = hospital_cost_report()
+    if hcr:
+        totals["hospital_days"] = hcr["inpatient_days"]
+
     from popest.sdwis import cws_population_served
 
     served = cws_population_served()
@@ -244,6 +256,10 @@ ROWS = [
      85000.0, "divide", 1.0, "BEA total personal income"),
     ("licensed drivers", "drivers/person", "drivers", 0.6396, 0.7488,
      "divide", 1.0, "FHWA DL-1C drivers (0.82-0.96/adult x 0.78 share)"),
+    ("Medicaid+CHIP enrollment", "fraction", "medicaid_enrolled", 0.19,
+     0.24, "divide", 1.0, "CMS state enrollment data (latest period)"),
+    ("hospital inpatient days", "days/person/year", "hospital_days",
+     0.48, 0.65, "divide", 1.0, "CMS cost report FY2021 (COVID-era)"),
     ("CWS water coverage", "fraction", "cws_served", 0.82, 0.88,
      "divide", 1.0, "USGS share on community water"),
     ("VMT", "miles/person/year", "vmt", 8500.0, 11000.0,

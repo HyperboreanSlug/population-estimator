@@ -225,6 +225,40 @@ def library_visits() -> dict:
                       f"{r['registered_borrowers_reported']:,.0f} reported"}
 
 
+def medicaid() -> dict:
+    """Population from Medicaid+CHIP enrollment."""
+    from popest.constants import MEDICAID_ENROLLMENT_SHARE
+    from popest.medicaid import medicaid_chip_enrollment
+
+    r = medicaid_chip_enrollment()
+    if not r:
+        return {}
+    return {"central": r["medicaid_chip"] / MEDICAID_ENROLLMENT_SHARE.central,
+            "low": r["medicaid_chip"] / MEDICAID_ENROLLMENT_SHARE.high,
+            "high": r["medicaid_chip"] / MEDICAID_ENROLLMENT_SHARE.low,
+            "form": "inverse",
+            "source": f"Medicaid+CHIP {r['year']}-{r['month']:02d}: "
+                      f"{r['medicaid_chip']:,.0f} enrolled "
+                      f"({r['jurisdictions']} jurisdictions)"}
+
+
+def hospital_days() -> dict:
+    """Population from total hospital inpatient days."""
+    from popest.constants import INPATIENT_DAYS_PER_CAPITA
+    from popest.healthcare import hospital_cost_report
+
+    r = hospital_cost_report()
+    if not r:
+        return {}
+    return {"central": r["inpatient_days"] / INPATIENT_DAYS_PER_CAPITA.central,
+            "low": r["inpatient_days"] / INPATIENT_DAYS_PER_CAPITA.high,
+            "high": r["inpatient_days"] / INPATIENT_DAYS_PER_CAPITA.low,
+            "form": "inverse",
+            "source": f"CMS cost report FY{r['fiscal_year']}: "
+                      f"{r['inpatient_days']:,.0f} inpatient days, "
+                      f"{r['discharges']:,.0f} discharges (COVID-era year)"}
+
+
 def drivers() -> dict:
     """Population from FHWA licensed drivers."""
     from popest.constants import ADULT_SHARE, DRIVERS_PER_ADULT
@@ -385,6 +419,8 @@ def collect_all(methods: dict) -> None:
     add_national(methods, "food_expenditure", food_expenditure)
     add_national(methods, "personal_income", personal_income)
     add_national(methods, "drivers", drivers)
+    add_national(methods, "medicaid", medicaid)
+    add_national(methods, "hospital_days", hospital_days)
     add_national(methods, "sdwis", sdwis)
     add_national(methods, "medicare", medicare)
     add_national(methods, "total_energy", total_energy)
