@@ -98,8 +98,9 @@ def render():
 
     def verdicts_txt(level):
         outside, fits = verd[level]
-        return f'{fits}/{n_const} fit' if level == 'census_pep_2024' \
-            else f'{outside}/{n_const} break'
+        if level in ('census_pep_2024', 'ensemble'):
+            return f'{fits}/{n_const} fit'
+        return f'{outside}/{n_const} break'
 
     # chart geometry: right column content is 612px wide; the track
     # starts after the 158px label + 10px gap and ends 10px + 52px
@@ -148,6 +149,7 @@ def render():
   .vtrack {{ flex:1; height:8px; background:#f2f4f7; border-radius:4px; position:relative; }}
   .vfill {{ position:absolute; height:100%; border-radius:4px; background:#d92d20; left:0; }}
   .vfill.ok {{ background:#12b76a; }}
+  .vfill.ens {{ background:#3b6fd4; }}
   .vnum {{ width:58px; text-align:right; font-weight:700; font-variant-numeric:tabular-nums; }}
   .concl {{ margin-top:16px; font-size:13px; line-height:1.5; color:#344054; background:#fffbeb;
            border:1px solid #fde68a; border-radius:10px; padding:11px 14px; }}
@@ -204,6 +206,9 @@ def render():
         <div class="vline"><span style="width:96px">Census {pep/1e6:.0f}M</span>
           <div class="vtrack"><div class="vfill ok" style="width:{100-verdicts_out('census_pep_2024'):.0f}%"></div></div>
           <div class="vnum">{verdicts_txt('census_pep_2024')}</div></div>
+        <div class="vline"><span style="width:96px">Ensemble {ensemble/1e6:.1f}M</span>
+          <div class="vtrack"><div class="vfill ens" style="width:{100-verdicts_out('ensemble'):.0f}%"></div></div>
+          <div class="vnum">{verdicts_txt('ensemble')}</div></div>
         <div class="vline"><span style="width:96px">400M claim</span>
           <div class="vtrack"><div class="vfill" style="width:{verdicts_out('claimed_400m'):.0f}%"></div></div>
           <div class="vnum">{verdicts_txt('claimed_400m')}</div></div>
