@@ -87,8 +87,8 @@ def estimate_from_buildings() -> dict:
     results = {}
     for label, res_frac, occ, pph in [
         ("central", 0.72, 0.87, 2.6),
-        ("low", 0.78, 0.90, 2.4),
-        ("high", 0.66, 0.84, 2.8),
+        ("low", 0.66, 0.84, 2.8),
+        ("high", 0.78, 0.90, 2.4),
     ]:
         results[f"buildings_{label}"] = national_total * res_frac * occ * pph
 

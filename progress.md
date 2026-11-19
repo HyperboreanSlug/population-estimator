@@ -24,3 +24,9 @@
   national-only, Method B unintegrated, download sprawl (20 scripts), no
   tests, heavy unused deps.
 - Completion plan written (phases 8-13).
+- Session 3 continued: fixed IRS double-count, energy data+constant,
+  span inversions, county 00000 row; chemistry reported-not-weighted.
+- Verification: 29 tests pass; full run 10.7s warm; outputs verified
+  (3,159 counties, contributions sum 1.0, states rollup equals county
+  sum). Ensemble 358,571,850 (CI 331.6M-382.6M), ratio 1.054 vs PEP.
+- README results + method-status table written; docs updated; pushed.

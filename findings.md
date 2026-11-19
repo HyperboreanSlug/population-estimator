@@ -64,3 +64,28 @@
   keeps the target parameters only.
 - Machine download gate blocks interactive curl (correct); all data
   comes through the project's own downloader.
+
+## Accuracy fixes forced by the verification run (2026-11-18)
+- IRS SOI 22zpallagi.csv: zipcode 00000 rows are state totals (N2
+  288.4M) plus 99999 unknown rows; real per-ZIP exemptions N2 = 284.3M.
+  Without the filter the method claimed 655M people.
+- energy.py hardcoded dict summed 2,934.5 BkWh (residential+commercial)
+  while claiming residential ~1,509 BkWh, divided by 10,500 kWh which is
+  EIA's per-HOUSEHOLD figure. Two errors roughly cancelled into the old
+  279M. Replaced with real SEDS series ESRCP (2024: 1,482.9 BkWh across
+  51 states) and constant 4,200 kWh/person (RECS: 10,500 kWh/household
+  / ~2.5 people/household). Energy now lands 353.1M.
+- Vitals (pipeline mapping) and buildings (module labels) had inverted
+  low/high spans; tests now cover span ordering.
+- combine_county accepted the housing national fallback row (fips 00000)
+  as a county, inflating the covered sum by 321M. Valid-FIPS guard added.
+- Wastewater chemistry: 4,046 municipal mass-unit reporters vs 30,121
+  plants with design flows. The load numerator is a reporting subset,
+  so the voice is reported (county columns, national.csv, discrepancy)
+  but carries no ensemble weight. BOD pop 17.6M, TSS pop 208.6M.
+- Final verified run: ensemble 358,571,850 (CI 331.6M-382.6M, 1000
+  draws), census PEP 2024 340,110,988, ratio 1.054. Spot checks exact:
+  IRS 284,291,130/0.88 = 323,058,102; energy 1,482.9e9/4200 = 353.07M;
+  vitals 3,667,758 births at 11/1000 = 333,432,545; housing
+  140,498,736 x 0.87 x 2.6 x 1.025 = 321,320,609; census PEP
+  340,110,988 matches co-est2024-alldata.csv POPESTIMATE2024 SUMLEV 50.

@@ -17,15 +17,20 @@ def load_soi_summary() -> dict:
 
     Citation: data/irs/soi_zip_2022.csv, fields N1 (returns), N2 (exemptions).
     Downloaded from: https://www.irs.gov/pub/irs-soi/22zpallagi.csv
+
+    Rows with zipcode 00000 (state totals) and 99999 (unknown) are
+    excluded: they repeat the per-ZIP rows and double the counts.
     """
     if not SOI_FILE.exists():
         return {"error": "SOI file not downloaded. Run: popest download"}
 
-    df = pd.read_csv(SOI_FILE, usecols=["STATEFIPS", "zipcode", "N1", "N2"])
-    total_returns = int(df["N1"].sum())
-    total_exemptions = int(df["N2"].sum())
-    n_states = int(df["STATEFIPS"].nunique())
-    n_zips = int(df["zipcode"].nunique())
+    df = pd.read_csv(SOI_FILE, usecols=["STATEFIPS", "zipcode", "N1", "N2"],
+                     dtype={"zipcode": str})
+    real = df[~df["zipcode"].isin(["00000", "99999"])].copy()
+    total_returns = int(real["N1"].sum())
+    total_exemptions = int(real["N2"].sum())
+    n_states = int(real["STATEFIPS"].nunique())
+    n_zips = int(real["zipcode"].nunique())
 
     return {
         "year": 2022,
@@ -33,7 +38,8 @@ def load_soi_summary() -> dict:
         "total_exemptions": total_exemptions,
         "states": n_states,
         "zip_codes": n_zips,
-        "source": "data/irs/soi_zip_2022.csv (fields N1, N2)",
+        "source": "data/irs/soi_zip_2022.csv (fields N1, N2; "
+                  "zipcode 00000/99999 excluded)",
         "url": "https://www.irs.gov/pub/irs-soi/22zpallagi.csv",
     }
 

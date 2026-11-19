@@ -110,6 +110,9 @@ CORE_SOURCES = [
      "https://www.epa.gov/facts-and-figures-about-materials-waste-and-recycling/"
      "national-overview-facts-and-figures-materials",
      "epa/msw_national_overview.html", "EPA MSW national overview", 0),
+    ("eia_seds_complete",
+     "https://www.eia.gov/state/seds/CDF/Complete_SEDS.csv",
+     "eia/Complete_SEDS.csv", "EIA SEDS complete series file", 0),
     ("census_pep_counties_2024",
      "https://www2.census.gov/programs-surveys/popest/datasets/2020-2024/"
      "counties/totals/co-est2024-alldata.csv",

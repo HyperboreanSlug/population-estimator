@@ -19,10 +19,10 @@ year; the target year labels the run.
 | `wastewater.py` | Municipal WWTP design flows | EPA ICIS-NPDES zip (332 MB) |
 | `dmr.py` | Per-facility BOD/TSS/N loads, county crosswalk, municipal SIC filter | EPA DMR FY2024 zip (612 MB) + ICIS_FACILITIES |
 | `sources.py` | Canonical manifest downloader (core + tiers 1-5) | all URLs from former download_* scripts |
-| `energy.py` | State electricity/gas consumption | EIA SEDS constants (2022) |
+| `energy.py` | State residential electricity (ESRCP) and natural gas (NGRCP) | EIA SEDS Complete_SEDS.csv, Vintage 2024F |
 | `waste.py` | MSW, gasoline, vehicles | EPA HTML / EIA CSV / FHWA |
 | `healthcare.py` | ER visits, physician visits, discharges | CDC NCHS/AHRQ published totals |
-| `census.py` | County population + housing units | Census 2020 PL API (keyless) with national fallback |
+| `census.py` | County PEP comparison + 2020 PL population/housing | PEP Vintage 2024 bulk CSV (no key); PL via key or national fallback |
 | `vitals.py` | Births/deaths | CDC WONDER attempt, NCHS fallback |
 | `consumption.py` | SNAP, wireless, grocery | USDA/CTIA/census published totals |
 | `irs.py` | Tax returns + exemptions | IRS SOI ZIP CSV (206 MB) |
@@ -72,18 +72,26 @@ popest run -> methods (fail-soft) -> ensemble + bootstrap
 
 ## Key Design Decisions
 
-1. Physical methods (water, wastewater flow, wastewater chemistry) get
-   the highest ensemble weights; census capped at 15%
+1. Physical methods (water, wastewater flow, energy) get the highest
+   ensemble weights; census capped at 15%
 2. Bootstrap samples per-capita constants uniformly in published ranges;
    the closed-form sampler in `uncertainty.py` is exact for
    single-constant methods
 3. Wastewater chemistry counts only SIC 4952 (municipal) facilities, so
    industrial loads do not inflate the population
-4. Counties with no method data get blank estimates (n_methods 0),
+4. Wastewater chemistry is REPORTED but never ensemble-weighted: its
+   mass-unit reporters are a subset (4,046 of ~30,121 municipal plants),
+   so it is a coverage-limited lower bound, not a total
+5. Counties with no method data get blank estimates (n_methods 0),
    never invented values
-5. A failed source drops that method's voice; the run never dies
-6. EPA NPDES data has mixed flow units; heuristic correction applied in
+6. A failed source drops that method's voice; the run never dies
+7. EPA NPDES data has mixed flow units; heuristic correction applied in
    `wastewater.py` (values > 100 treated as gal/day)
+8. IRS SOI rows with zipcode 00000/99999 are state totals and excluded
+   (they double the counts)
+9. Residential electricity constant is per person (~4,200 kWh from RECS
+   10,500 kWh per household / ~2.5 per household), fixing the prior
+   per-household mislabel
 
 ## Historical note
 

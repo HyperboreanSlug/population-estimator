@@ -8,17 +8,17 @@ State-level estimate using EIA residential electricity sales.
 import pandas as pd
 
 from popest.constants import ELECTRICITY_RESIDENTIAL
-from popest.energy import fetch_natural_gas_residential, fetch_residential_electricity_state
+from popest.energy import fetch_residential_electricity_state
 from popest.geo import STATE_ABBREV_TO_FIPS
 
 
-def estimate(api_key: str | None = None) -> pd.DataFrame:
+def estimate(year: int | None = None) -> pd.DataFrame:
     """Produce state-level population estimates from energy consumption.
 
     Returns DataFrame with columns:
         state, year, pop_elec_central, pop_elec_low, pop_elec_high
     """
-    elec = fetch_residential_electricity_state(api_key)
+    elec = fetch_residential_electricity_state(year)
     if elec.empty:
         return pd.DataFrame()
 

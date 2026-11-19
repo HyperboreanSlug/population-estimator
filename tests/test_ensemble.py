@@ -17,9 +17,9 @@ from popest.uncertainty import bootstrap_national
 def test_combine_national_weights_and_census_cap():
     estimates = {"water": 400.0, "energy": 200.0}
     result = combine_national(estimates, census=100.0)
-    w = {"water": 0.15, "energy": 0.06}
-    census_w = min(CENSUS_WEIGHT_CAP, 1.0 - 0.21)
-    expected = (400 * 0.15 + 200 * 0.06 + 100 * census_w) / (0.21 + census_w)
+    w = {"water": 0.16, "energy": 0.06}
+    census_w = min(CENSUS_WEIGHT_CAP, 1.0 - 0.22)
+    expected = (400 * 0.16 + 200 * 0.06 + 100 * census_w) / (0.22 + census_w)
     assert result["combined"] == pytest.approx(expected)
     assert result["contributions"]["census"]["weight"] == pytest.approx(census_w)
 

@@ -12,9 +12,8 @@ import numpy as np
 import pandas as pd
 
 METHOD_WEIGHTS = {
-    "water": 0.15,
-    "wastewater": 0.12,
-    "wastewater_chem": 0.10,
+    "water": 0.16,
+    "wastewater": 0.13,
     "energy": 0.06,
     "msw": 0.05,
     "gasoline": 0.04,
@@ -32,10 +31,12 @@ METHOD_WEIGHTS = {
 
 CENSUS_WEIGHT_CAP = 0.15
 
+# wastewater_chem is REPORTED but never ensemble-weighted: its numerator
+# (municipal plants that report mass-unit loads) is a reporting subset,
+# not a national total, so it is a coverage-limited lower bound.
 COUNTY_WEIGHTS = {
     "water": 0.30,
     "wastewater": 0.20,
-    "wastewater_chem": 0.15,
     "housing": 0.20,
     "census": 0.15,
 }
@@ -117,6 +118,14 @@ def combine_county(method_dfs: dict[str, pd.DataFrame],
     merged = frames[0]
     for f in frames[1:]:
         merged = merged.merge(f, on="fips", how="outer")
+
+    # National fallback rows (fips 00000) and stray codes are not
+    # counties; drop them so national totals never pose as counties.
+    from popest.geo import is_valid_county_fips
+
+    merged = merged[merged["fips"].astype(str).str.zfill(5)
+                    .apply(is_valid_county_fips)].copy()
+    merged["fips"] = merged["fips"].astype(str).str.zfill(5)
 
     methods = [m for m in COUNTY_WEIGHTS
                if f"pop_{m}_central" in merged.columns]

@@ -64,22 +64,28 @@ Status: complete
 - [x] 27 passing
 
 ### Phase 12: Verification run (fresh clone, real data)
-Status: pending
-- [ ] Download core data (USGS, NPDES part1, DMR FY2024, IRS SOI, BLS,
-      EIA, EPA MSW, gasoline)
-- [ ] ClamAV scan of data/ before parsing
-- [ ] `popest run --year 2024` end to end
-- [ ] Spot-check outputs against source values
+Status: complete
+- [x] Download core data (USGS, NPDES part1, DMR FY2024, IRS SOI, BLS,
+      EIA incl. SEDS complete, EPA MSW, gasoline, census PEP counties)
+- [x] ClamAV scan of data/ before parsing (0 infected, 1,169 MB)
+- [x] `popest run --year 2024` end to end (10.7s warm, 50s cold)
+- [x] Spot-check outputs against source values
+- [x] Accuracy fixes found by the run: IRS state-total row double-count,
+      energy data mislabeled residential+commercial with a per-household
+      constant, vitals/buildings range inversions, housing national row
+      leaking into the county ensemble, chemistry subset numerator
+      weighted as a total
 
 ### Phase 13: Documentation and push
-Status: pending
-- [ ] README: real usage, method-status table, run results
-- [ ] SOURCE.md: new module map
-- [ ] Planning files updated
-- [ ] Commit and push
+Status: complete
+- [x] README: real usage, method-status table, run results
+- [x] SOURCE.md: new module map + design decisions
+- [x] PLAN.md: structure section + electricity constant corrected
+- [x] Planning files updated
+- [x] Commit and push
 
 ## Next Step
-Phase 8: create venv, install dependencies, set repo-local git identity.
+Complete: all phases finished. See progress.md session 3.
 
 ## Decisions Made
 - Physical methods get 85% ensemble weight, census capped at 15%
@@ -102,3 +108,13 @@ Phase 8: create venv, install dependencies, set repo-local git identity.
 | Error | Attempt | Resolution |
 |-------|---------|------------|
 | (sessions 1-2: none recorded) | | |
+| Census 2020 PL keyless returns HTML "Missing Key" (HTTP 200) | 1 | PEP Vintage 2024 county CSV as keyless comparison source |
+| Census PEP national file URL 404 (vintage rolled over) | 2 | county file subsumes it; URL removed from manifest |
+| EIA SEDS/861 old URLs now HTML error pages | 3 | found current CDF/Complete_SEDS.csv from the SEDS page; MSN codes ESRCP/NGRCP |
+| clamscan scanned 0 bytes | 1 | system DB path empty; pass --database=$HOME/.local/share/clamav |
+| IRS SOI N2 double-counted (zipcode 00000 state-total rows) | 1 | exclude zipcode 00000/99999 |
+| Energy constant 10,500 kWh/person was per HOUSEHOLD | 1 | RECS chain: 10,500 kWh/household / ~2.5 = 4,200 kWh/person; data moved to real SEDS ESRCP |
+| Energy dict summed 2,934 BkWh but docstring said 1,509 (residential+commercial mislabeled) | 1 | replaced with parsed ESRCP state series |
+| Vitals/buildings low-high spans inverted in pipeline/methods | 1 | corrected mappings |
+| Housing national fallback row (fips 00000) entered county ensemble | 1 | valid-FIPS guard in combine_county |
+| Chemistry subset numerator weighted in ensemble (dragged -28M) | 1 | reported but unweighted; documented |

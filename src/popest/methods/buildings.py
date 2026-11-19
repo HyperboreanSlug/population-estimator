@@ -21,8 +21,8 @@ def estimate() -> pd.DataFrame:
             "state": state,
             "buildings": count,
             "pop_buildings_central": count * 0.72 * 0.87 * 2.6,
-            "pop_buildings_low": count * 0.78 * 0.90 * 2.4,
-            "pop_buildings_high": count * 0.66 * 0.84 * 2.8,
+            "pop_buildings_low": count * 0.66 * 0.84 * 2.8,
+            "pop_buildings_high": count * 0.78 * 0.90 * 2.4,
         })
     return pd.DataFrame(rows)
 

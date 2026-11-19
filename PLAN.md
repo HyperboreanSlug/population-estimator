@@ -352,7 +352,7 @@ and public health literature.
 | Ammonia-N contribution | 5 g/person/day | 4-7 | Wastewater engineering texts |
 | BOD contribution | 70 g/person/day | 55-90 | Standard design value |
 | TSS contribution | 12 g/person/day | 8-18 | Standard design value |
-| Residential electricity | 10,500 kWh/person/yr | 9,000-12,500 | EIA |
+| Residential electricity | 4,200 kWh/person/yr | 3,500-5,200 | EIA RECS 2020: 10,500 kWh per household, ~2.5 per household |
 | MSW generation | 4.9 lbs/person/day | 4.0-5.5 | EPA Facts & Figures |
 | Caloric need | 2,200 kcal/person/day | 1,800-2,800 | USDA/WHO |
 | ER visit rate | 0.4 visits/person/yr | 0.3-0.5 | CDC NCHS |

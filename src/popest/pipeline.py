@@ -76,6 +76,7 @@ def run(year: int = 2024, api_key: str | None = None) -> dict:
         print(f"  FAILED: {e}")
 
     step("[3/12] Wastewater chemistry (EPA DMR FY2024)...")
+    chem_summary = {}
     try:
         from popest import dmr
         from popest.methods.wastewater_chemistry import estimate, national_summary
@@ -84,26 +85,25 @@ def run(year: int = 2024, api_key: str | None = None) -> dict:
         cmap = dmr.facility_county_map()
         muni = dmr.municipal_permit_ids()
         chem_c = estimate(loads, cmap, muni)
-        cs = national_summary(chem_c, loads, muni)
-        methods["wastewater_chem"] = {
-            "central": cs.get("bod_pop", 0.0),
-            "low": float(chem_c["pop_chem_low"].sum()) if not chem_c.empty else 0.0,
-            "high": float(chem_c["pop_chem_high"].sum()) if not chem_c.empty else 0.0,
-            "form": "inverse",
-            "source": (f"EPA DMR BOD loads, {cs.get('bod_facilities', 0)} "
-                       "municipal reporters"),
-        }
+        chem_summary = national_summary(chem_c, loads, muni)
+        for key in ("bod", "TSS", "Total N", "Ammonia-N"):
+            pop = chem_summary.get(f"{key}_pop")
+            if pop:
+                n = chem_summary.get(f"{key}_facilities", 0)
+                print(f"  {key + ' population':<16} {pop:>15,.0f}"
+                      f"  ({n} municipal reporters)")
+        if chem_summary:
+            notes.append(
+                f"wastewater chemistry REPORTED but not ensemble-weighted: "
+                f"only {chem_summary.get('bod_facilities', 0)} municipal "
+                f"plants report BOD in mass units; the load numerator is a "
+                f"reporting subset, a coverage-limited lower bound.")
         chem_c = chem_c.rename(columns={
             "pop_chem_central": "pop_wastewater_chem_central",
             "pop_chem_low": "pop_wastewater_chem_low",
             "pop_chem_high": "pop_wastewater_chem_high",
         })
         county_dfs["wastewater_chem"] = chem_c
-        print(f"  BOD population {cs.get('bod_pop', 0):,.0f} "
-              f"({cs.get('bod_facilities', 0)} facilities)")
-        for key in ("TSS", "Total N", "Ammonia-N"):
-            if f"{key}_pop" in cs:
-                print(f"  {key} population {cs[f'{key}_pop']:,.0f}")
     except Exception as e:
         notes.append(f"wastewater_chem FAILED: {e}")
         print(f"  FAILED: {e}")
@@ -232,7 +232,7 @@ def run(year: int = 2024, api_key: str | None = None) -> dict:
 
     # --- outputs -------------------------------------------------------
     paths = _write_outputs(county, names, states, result, boot, census_pop,
-                           methods, notes, decennial_2020)
+                           methods, notes, decennial_2020, chem_summary)
     print("\n  Outputs:")
     for p in paths:
         print(f"    {p}")
@@ -303,8 +303,8 @@ def _vitals() -> dict:
     from popest.methods.vitals import estimate
 
     r = estimate()
-    return {"central": r["births_central"], "low": r["births_high"],
-            "high": r["births_low"], "form": "inverse",
+    return {"central": r["births_central"], "low": r["births_low"],
+            "high": r["births_high"], "form": "inverse",
             "source": "CDC NCHS births 2022"}
 
 
@@ -346,7 +346,8 @@ def _buildings() -> dict:
 
 
 def _write_outputs(county, names, states, result, boot, census_pop,
-                   methods, notes, decennial_2020=0.0) -> list:
+                   methods, notes, decennial_2020=0.0,
+                   chem_summary=None) -> list:
     paths = [
         report.write_counties(county, names),
         report.write_states(states),
@@ -366,11 +367,22 @@ def _write_outputs(county, names, states, result, boot, census_pop,
         "metric": "ratio_to_census_pep",
         "value": result["combined"] / census_pop if census_pop else 0.0,
     }]
+    if chem_summary and chem_summary.get("bod_pop"):
+        national_rows.append({
+            "metric": "wastewater_chem_bod_pop_reported",
+            "value": chem_summary["bod_pop"],
+        })
+        national_rows.append({
+            "metric": "wastewater_chem_bod_facilities",
+            "value": chem_summary.get("bod_facilities", 0),
+        })
     national = pd.DataFrame(national_rows)
     paths.append(report.write_national(national))
 
-    disc = discrepancy_report(
-        {m: v["central"] for m, v in methods.items()}, census_pop)
+    estimates = {m: v["central"] for m, v in methods.items()}
+    if chem_summary and chem_summary.get("bod_pop"):
+        estimates["wastewater_chem"] = chem_summary["bod_pop"]
+    disc = discrepancy_report(estimates, census_pop)
     paths.append(report.write_discrepancy(disc))
 
     lines = [
@@ -385,6 +397,15 @@ def _write_outputs(county, names, states, result, boot, census_pop,
     if census_pop:
         lines.append(f"Ratio to census PEP: "
                      f"{result['combined'] / census_pop:.3f}")
+    if chem_summary and chem_summary.get("bod_pop"):
+        lines.append(
+            "Wastewater chemistry (REPORTED, not ensemble-weighted): "
+            f"BOD {chem_summary['bod_pop']:,.0f} from "
+            f"{chem_summary.get('bod_facilities', 0)} municipal reporters")
+        for key in ("TSS", "Total N", "Ammonia-N"):
+            pop = chem_summary.get(f"{key}_pop")
+            if pop:
+                lines.append(f"  {key} population equivalent: {pop:,.0f}")
     lines += [
         "",
         "Method contributions:",

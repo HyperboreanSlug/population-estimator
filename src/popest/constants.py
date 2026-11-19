@@ -74,11 +74,14 @@ TSS = PerCapitaConstant(
 )
 
 ELECTRICITY_RESIDENTIAL = PerCapitaConstant(
-    central=10500.0,
-    low=9000.0,
-    high=12500.0,
+    central=4200.0,
+    low=3500.0,
+    high=5200.0,
     unit="kWh/person/year",
-    source="EIA 2023 residential sales / population.",
+    source="EIA RECS 2020: ~10,500 kWh average site consumption per "
+           "HOUSEHOLD; average household ~2.5 people (RECS) gives "
+           "~4,200 kWh/person. The 10,500 figure is per household, not "
+           "per person; using it per person understated population ~2.5x.",
 )
 
 MSW_GENERATION = PerCapitaConstant(
