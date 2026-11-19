@@ -158,11 +158,13 @@ def test_medicare_latest_national_rows(tmp_path, monkeypatch):
         "YEAR,MONTH,BENE_GEO_LVL,BENE_STATE_ABRVTN,BENE_COUNTY_DESC,"
         "BENE_FIPS_CD,TOT_BENES,ORGNL_MDCR_BENES,MA_AND_OTH_BENES,"
         "AGED_TOT_BENES,AGED_ESRD_BENES,DSBLD_TOT_BENES\n"
-        "2025,11,National,,,,58000000,34000000,24000000,52000000,"
+        "2025,Year,National,,,,58000000,34000000,24000000,52000000,"
         "100000,6000000\n"
-        "2026,7,National,,,,60000000,34000000,26000000,54000000,"
+        "2025,November,National,,,,58000000,34000000,24000000,52000000,"
         "100000,6000000\n"
-        "2026,7,State,AL,,,500000,300000,200000,450000,5000,50000\n"
+        "2026,July,National,,,,60000000,34000000,26000000,54000000,"
+        "100000,6000000\n"
+        "2026,July,State,AL,,,500000,300000,200000,450000,5000,50000\n"
     )
     cache = tmp_path / "medicare.csv"
     cache.write_text(csv)
@@ -171,6 +173,7 @@ def test_medicare_latest_national_rows(tmp_path, monkeypatch):
     benes = medicare_mod.national_aged_beneficiaries()
     assert benes["year"] == 2026
     assert benes["month"] == 7
+    assert benes["month_name"] == "July"
     assert benes["aged_benes"] == 54_000_000.0
     assert benes["total_benes"] == 60_000_000.0
 

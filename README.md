@@ -53,37 +53,38 @@ All written to `output/` by `popest run`:
   level vs. its published range
 - `summary.txt` — human-readable report
 
-## Results (run of 2026-11-18, fresh clone, all data downloaded)
+## Results (run of 2026-11-19, fresh clone, all data downloaded)
 
 | Metric | Value |
 |--------|-------|
-| Ensemble central | 360,979,127 |
-| Bootstrap 90% CI (1000 draws) | 338,090,490 - 380,824,318 |
+| Ensemble central | 361,848,813 |
+| Bootstrap 90% CI (1000 draws) | 339,389,893 - 381,127,932 |
 | Census PEP 2024 | 340,110,988 |
-| Ratio to census PEP | 1.061 |
+| Ratio to census PEP | 1.064 |
 | Census decennial 2020 | 331,449,281 |
 
 Method contributions (central, weight, data):
 
 | Method | Central | Weight | Data |
 |--------|---------|--------|------|
-| Wastewater design flow | 553.7M | 0.11 | EPA ICIS-NPDES permits |
+| Wastewater design flow | 553.7M | 0.10 | EPA ICIS-NPDES permits |
 | Vehicles | 427.5M | 0.03 | FHWA registrations 2022 |
 | Water systems served | 390.5M | 0.05 | EPA SDWIS: 331.9M utility-reported, active CWS |
+| Medicare aged | 388.4M | 0.03 | CMS July 2026: 64.04M aged beneficiaries |
 | Water budget | 356.2M | 0.13 | USGS 2015, 3,142 counties |
 | Energy | 353.1M | 0.05 | EIA SEDS residential kWh 2024 |
 | BLS employment | 352.5M | 0.04 | BLS API (employed / adult EP ratio / share) |
 | Census PEP 2024 | 340.1M | 0.12 | capped comparison voice |
-| SNAP | 339.9M | 0.03 | USDA FNS annual summary FY2025 (42.14M participants) |
+| SNAP | 339.9M | 0.02 | USDA FNS annual summary FY2025 (42.14M participants) |
 | Gasoline | 339.7M | 0.03 | EIA product supplied |
-| VMT | 339.6M | 0.03 | FHWA VM-1 2024 (3.294T miles) |
-| Grocery | 339.3M | 0.03 | census retail 2023 |
+| VMT | 339.6M | 0.02 | FHWA VM-1 2024 (3.294T miles) |
+| Grocery | 339.3M | 0.02 | census retail 2023 |
 | K-12 enrollment | 337.2M | 0.03 | NCES 2024-25 (49.57M students) |
 | Vitals (births) | 333.4M | 0.04 | CDC NCHS births 2022 |
-| Wireless | 333.3M | 0.03 | CTIA survey 2023 |
+| Wireless | 333.3M | 0.02 | CTIA survey 2023 |
 | MSW | 327.0M | 0.04 | EPA 2018 |
 | Healthcare (ER) | 325.0M | 0.05 | CDC NCHS 2021 |
-| IRS filers | 323.1M | 0.07 | IRS SOI TY2022 (284.3M exemptions) |
+| IRS filers | 323.1M | 0.06 | IRS SOI TY2022 (284.3M exemptions) |
 | Housing | 321.3M | 0.06 | census 2020 housing units |
 | Buildings | 209.3M | 0.05 | MS footprints (approximated ratios) |
 
@@ -107,11 +108,11 @@ the constant's published range (`output/reconciliation.csv`):
 
 | Claimed population | Constants outside published range |
 |---|---|
-| Census PEP 2024 (340.1M) | 3 of 15 |
-| Ensemble (361.0M) | 5 of 15 |
-| 400M | 7 of 15 |
-| 450M | 12 of 15 |
-| 500M | 14 of 15 |
+| Census PEP 2024 (340.1M) | 4 of 16 |
+| Ensemble (361.8M) | 5 of 16 |
+| 400M | 7 of 16 |
+| 450M | 13 of 16 |
+| 500M | 15 of 16 |
 
 At 450M only three measured totals stay inside their published ranges:
 total water withdrawals (92.0 gal/person/day, at the very bottom of the
@@ -119,16 +120,18 @@ blended 90.5-153.5 range), vehicle registrations (0.63 per person = 0.81
 per adult), and wastewater design flow (98.4 gal/person/day, a capacity
 figure). Every other measured total — electricity sold, gasoline
 supplied, MSW, VMT, K-12 enrollment, SNAP, births, ER visits, IRS
-exemptions, housing units, employment — would need its per-capita rate
-to be wrong by 15-45% in the same direction simultaneously. At 500M only
-the wastewater design-flow constant survives.
+exemptions, housing units, employment, Medicare aged enrollment — would
+need its per-capita rate to be wrong by 15-45% in the same direction
+simultaneously. At 500M only the wastewater design-flow constant
+survives.
 
-Three voices do sit meaningfully above census: utility-reported
+Four voices sit meaningfully above census: utility-reported
 community-water population served (378-405M after the coverage
-fraction), vehicle registrations (363-485M), and wastewater design
-capacity (403-738M). The bootstrap 90% CI of the full ensemble is
-338-381M. The measured evidence does not support 450M+; it clusters
-between the census count and roughly 380M.
+fraction), Medicare aged beneficiaries (357-426M, implying a 19.4% aged
+share at the census count), vehicle registrations (363-485M), and
+wastewater design capacity (403-738M). The bootstrap 90% CI of the full
+ensemble is 339-381M. The measured evidence does not support 450M+; it
+clusters between the census count and roughly 380M.
 
 ## Method status (data honesty)
 
@@ -136,17 +139,21 @@ Runs on downloaded real data: water (USGS), wastewater design flow (EPA
 NPDES), wastewater chemistry (EPA DMR), energy (EIA SEDS), VMT (FHWA
 VM-1), IRS (SOI CSV), BLS (API), MSW and gasoline (EPA/EIA pages), SNAP
 (USDA FNS annual summary), K-12 enrollment (NCES CCD), water systems
-(EPA SDWIS), census PEP (bulk CSV).
+(EPA SDWIS), Medicare aged enrollment (CMS Monthly Enrollment CSV, July
+2026), census PEP (bulk CSV). The CMS file was fetched through an
+operator-authorized SSH proxy to a VPS because the local resolver blocks
+cms.gov; it passed the machine's ClamAV download gate before use, and
+the client also supports `POP_EST_SOCKS_PROXY` as an alternative route.
 
-Uses published national constants where bulk data is blocked or app-shelled:
-healthcare totals (CDC NCHS/AHRQ), vitals (NCHS final), wireless (CTIA),
-grocery (census retail), vehicles numerator (FHWA MV-1 2022), buildings
-(footprint counts verified for 5 states, national total and ratios
-approximated and marked `APPROXIMATED` in the code).
+Uses published national constants where bulk data is blocked or
+unpublished: healthcare totals (CDC NCHS/AHRQ), vitals (NCHS final),
+wireless (CTIA survey — verified that no FCC bulk dataset of
+subscriptions exists; the counts are CTIA-proprietary), grocery (census
+retail), vehicles numerator (FHWA MV-1 2022), buildings (footprint
+counts verified for 5 states, national total and ratios approximated
+and marked `APPROXIMATED` in the code).
 
-Blocked or unavailable from this machine (fail-soft, reason printed):
-CMS Medicare (cms.gov DNS blocked locally; dataset is public),
-FCC wireless (fcc.gov DNS blocked locally), CWNS 2022 facility data
+Unavailable (fail-soft, reason printed): CWNS 2022 facility data
 (SSO-gated), ERS total-calorie food series (ends 2010 and is
 per-capita, i.e. census-denominated and circular), TTB alcohol (CSVs
 fetched; units not stated in file, so reported raw, not converted).

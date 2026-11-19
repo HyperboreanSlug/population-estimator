@@ -36,3 +36,7 @@
   voices; BLS denominator fix; reconcile.py with 15-16 constant rows.
 - 36 tests passing. Ensemble 360,979,127 (CI 338.1-380.8M), ratio 1.061
   vs PEP 2024. 450M claim: 12/15 constants break; 500M: 14/15.
+- Medicare voice live via VPS-proxied download (operator-authorized
+  ssh), dlgate PASS, parse fixed for month names; ensemble 361.8M.
+  FCC: no subscriptions dataset exists on opendata (verified through
+  the same tunnel); CTIA constant documented as the only source.

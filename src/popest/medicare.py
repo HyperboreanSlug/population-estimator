@@ -51,10 +51,16 @@ def download_medicare_csv() -> Path:
     return CACHE
 
 
+MONTH_ORDER = {name: i for i, name in enumerate(
+    ["January", "February", "March", "April", "May", "June", "July",
+     "August", "September", "October", "November", "December"], start=1)}
+
+
 def national_aged_beneficiaries() -> dict:
     """Latest national aged Medicare beneficiaries.
 
-    Returns {year, month, aged_benes, total_benes, source}.
+    The MONTH column holds month names; annual "Year" rows are skipped.
+    Returns {year, month, month_name, aged_benes, total_benes, source}.
     """
     path = download_medicare_csv()
     df = pd.read_csv(path, dtype=str, low_memory=False)
@@ -62,17 +68,20 @@ def national_aged_beneficiaries() -> dict:
     if df.empty:
         raise RuntimeError("no national rows in Medicare enrollment CSV")
 
+    df = df[df["MONTH"].isin(MONTH_ORDER)].copy()
     df["YEAR"] = pd.to_numeric(df["YEAR"], errors="coerce")
     df = df.dropna(subset=["YEAR"])
     latest_year = int(df["YEAR"].max())
     df = df[df["YEAR"] == latest_year]
-    months = pd.to_numeric(df["MONTH"], errors="coerce")
-    latest_month = int(months.max())
-    row = df[months == latest_month].iloc[0]
+    df["month_idx"] = df["MONTH"].map(MONTH_ORDER)
+    row = df.loc[df["month_idx"].idxmax()]
 
+    month_idx = int(row["month_idx"])
+    month_name = row["MONTH"]
     return {
         "year": latest_year,
-        "month": latest_month,
+        "month": month_idx,
+        "month_name": month_name,
         "aged_benes": float(row["AGED_TOT_BENES"]),
         "total_benes": float(row["TOT_BENES"]),
         "source": "data.cms.gov Medicare Monthly Enrollment "
