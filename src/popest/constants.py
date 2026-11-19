@@ -275,6 +275,25 @@ LIBRARY_VISITS_PER_CAPITA = PerCapitaConstant(
            "denominator; wide local variance.",
 )
 
+DRIVERS_PER_ADULT = PerCapitaConstant(
+    central=0.90,
+    low=0.82,
+    high=0.96,
+    unit="licensed drivers/adult",
+    source="FHWA DL-1C licensed drivers per driving-age adult "
+           "(239.8M / ~269M adults in 2024 = ~0.89). Census-informed "
+           "denominator; administrative count with modest weight.",
+)
+
+ADULT_SHARE = PerCapitaConstant(
+    central=0.78,
+    low=0.76,
+    high=0.80,
+    unit="fraction of population aged 16+",
+    source="Published demographic share of driving-age adults; "
+           "census-informed denominator.",
+)
+
 PER_CAPITA_INCOME = PerCapitaConstant(
     central=73000.0,
     low=62000.0,

@@ -144,6 +144,12 @@ def gather_totals() -> dict:
     if income:
         totals["personal_income"] = income["total_income"]
 
+    from popest.drivers import licensed_drivers
+
+    drv = licensed_drivers()
+    if drv:
+        totals["drivers"] = drv["drivers"]
+
     from popest.sdwis import cws_population_served
 
     served = cws_population_served()
@@ -236,6 +242,8 @@ ROWS = [
      "divide", 1.0, "IMLS PLS annual visits"),
     ("per-capita income", "dollars/person/year", "personal_income", 62000.0,
      85000.0, "divide", 1.0, "BEA total personal income"),
+    ("licensed drivers", "drivers/person", "drivers", 0.6396, 0.7488,
+     "divide", 1.0, "FHWA DL-1C drivers (0.82-0.96/adult x 0.78 share)"),
     ("CWS water coverage", "fraction", "cws_served", 0.82, 0.88,
      "divide", 1.0, "USGS share on community water"),
     ("VMT", "miles/person/year", "vmt", 8500.0, 11000.0,

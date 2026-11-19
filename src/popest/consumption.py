@@ -71,17 +71,47 @@ def wireless_subscribers_national() -> dict:
 
 
 def grocery_sales_national() -> dict:
-    """Census Bureau retail trade - food and beverage stores.
+    """Census MARTS food and beverage store sales (NAICS 445).
 
-    Source: Census Bureau Monthly Retail Trade Survey, 2023 annual.
-    Total food-at-home spending: ~$950 billion.
-    Per-capita food-at-home: ~$2,800/year.
+    Source: data/census/adv44500.txt (not adjusted, millions of
+    dollars). The latest COMPLETE calendar year is used. Falls back to
+    the published 2023 literature figure when the file is absent.
+    Note: NAICS 445 excludes food-at-home purchases at general
+    merchandise stores; the per-capita constant matches this numerator.
     """
+    path = Path("data/census/adv44500.txt")
+    if path.exists():
+        lines = path.read_text().splitlines()
+        in_block = False
+        years = []
+        for l in lines:
+            s = l.strip()
+            if s == "FOOD & BEVERAGE STORES":
+                in_block = True
+                continue
+            if in_block and s == "SEASONAL FACTORS":
+                break
+            if in_block and s[:4].isdigit():
+                parts = s.split()
+                try:
+                    vals = [float(v) for v in parts[1:]]
+                except ValueError:
+                    continue
+                years.append((int(parts[0]), vals))
+        complete = [(y, sum(v)) for y, v in years if len(v) == 12]
+        if complete:
+            year, total_millions = max(complete)
+            return {
+                "year": year,
+                "total_dollars": total_millions * 1e6,
+                "source": "data/census/adv44500.txt (MARTS NAICS 445, "
+                          "not adjusted, complete year)",
+            }
+
     return {
         "year": 2023,
-        "total_food_at_home_billion": 950.0,
-        "per_capita_food_at_home": 2800.0,
-        "source": "Census Bureau Retail Trade 2023",
+        "total_dollars": 950.0e9,
+        "source": "Census Bureau Retail Trade 2023 (file not downloaded)",
     }
 
 
@@ -124,8 +154,9 @@ def estimate_consumption() -> dict:
         results[f"wireless_{label}"] = wireless["unique_subscriber_estimate"] / rate
 
     grocery = grocery_sales_national()
-    total_spending = grocery["total_food_at_home_billion"] * 1e9
-    for label, pc in [("central", 2800), ("low", 3200), ("high", 2400)]:
-        results[f"grocery_{label}"] = total_spending / pc
+    total_grocery = grocery["total_dollars"]
+    for label, pc in [("central", 2950.0), ("low", 3450.0),
+                      ("high", 2550.0)]:
+        results[f"grocery_{label}"] = total_grocery / pc
 
     return results

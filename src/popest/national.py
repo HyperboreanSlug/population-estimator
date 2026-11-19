@@ -126,7 +126,8 @@ NATIONAL_MULTI_SPEC = {
 CONSUMPTION_SPEC = {
     "snap": ("snap", "inverse", "USDA FNS SNAP FY2025 (annual summary)"),
     "wireless": ("wireless", "inverse", "CTIA survey 2023"),
-    "grocery": ("grocery", "inverse", "census retail 2023"),
+    "grocery": ("grocery", "inverse",
+                "Census MARTS 445 food & beverage stores 2025"),
 }
 
 
@@ -222,6 +223,25 @@ def library_visits() -> dict:
                       f"({r['library_visits_count']:,.0f}); "
                       f"registered borrowers "
                       f"{r['registered_borrowers_reported']:,.0f} reported"}
+
+
+def drivers() -> dict:
+    """Population from FHWA licensed drivers."""
+    from popest.constants import ADULT_SHARE, DRIVERS_PER_ADULT
+    from popest.drivers import licensed_drivers
+
+    r = licensed_drivers()
+    if not r:
+        return {}
+    return {"central": r["drivers"] / (DRIVERS_PER_ADULT.central
+                                       * ADULT_SHARE.central),
+            "low": r["drivers"] / (DRIVERS_PER_ADULT.high
+                                   * ADULT_SHARE.high),
+            "high": r["drivers"] / (DRIVERS_PER_ADULT.low
+                                    * ADULT_SHARE.low),
+            "form": "inverse",
+            "source": f"FHWA licensed drivers {r['year']} "
+                      f"({r['drivers']:,.0f})"}
 
 
 def personal_income() -> dict:
@@ -364,6 +384,7 @@ def collect_all(methods: dict) -> None:
     add_national(methods, "library_visits", library_visits)
     add_national(methods, "food_expenditure", food_expenditure)
     add_national(methods, "personal_income", personal_income)
+    add_national(methods, "drivers", drivers)
     add_national(methods, "sdwis", sdwis)
     add_national(methods, "medicare", medicare)
     add_national(methods, "total_energy", total_energy)

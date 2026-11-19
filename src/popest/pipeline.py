@@ -227,6 +227,9 @@ def run(year: int = 2024, api_key: str | None = None) -> dict:
     national.add_national(methods, "personal_income",
                           national.personal_income)
 
+    step("Licensed drivers (FHWA DL-1C)...")
+    national.add_national(methods, "drivers", national.drivers)
+
     step("Water systems (EPA SDWIS CWS served)...")
     national.add_national(methods, "sdwis", national.sdwis)
 

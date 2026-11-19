@@ -241,3 +241,28 @@ commit message, which was written from memory (354,161,842 was wrong). New voice
   silently absorbed it.
 - Ensemble 356,214,375 (CI 337.4M-371.9M), ratio 1.047; reconciliation
   28 constants: 450M 22/28, 500M 26/28.
+
+## Final wiring batch part 2 (2026-11-19)
+- FHWA DL-1C 2024: licensed drivers 239,824,944 (dl1c.xlsx, header
+  row 5, col 'TOTAL DRIVERS (2)', Total row; dl1.xlsx does not exist
+  for any year; 2025 not published). Voice 341.6M via drivers/adult
+  0.90 (0.82-0.96) x adult share 0.78.
+- Census MARTS grocery upgrade: adv44500.txt (clean bulk series
+  1992-2026, not adjusted). 2025 complete year food & beverage stores
+  = $1,006,653M (2026 partial 10-mo $845,679M). Voice 341.2M; replaces
+  the $950B literature figure.
+- Medicaid+CHIP enrollment: dataset verified (pi-dataset-october-2026-
+  release.csv; datastore count 11,220 rows, max period 202607,
+  51-state sum 72,946,510 computed) but download.medicaid.gov is
+  DNS-blocked locally (DNSSEC failed-auxiliary, same class as cms.gov)
+  -> staged for the VPS route.
+- Medicaid State Drug Utilization: sdud2026 (123MB partial) /
+  sdud2025 (508MB full) with 'Number of Prescriptions' column; same
+  DNS block -> staged for the VPS route.
+- FCC Form 477 fixed broadband: DEAD END. DNS-blocked locally AND
+  Akamai 403 even IP-pinned; the fixed-deployment series ended at the
+  June 2020 vintage (replaced by BDC per search results). Not wireable.
+- PRC postal volume: DEAD END. PDF reports only; data.prc.gov does not
+  exist; USPS revenue-pieces-weight pages are 403 bot-walled.
+- Ensemble 355,974,550 (CI 338.0M-370.4M), ratio 1.047; reconciliation
+  29 constants: 450M 23/29, 500M 27/29.
