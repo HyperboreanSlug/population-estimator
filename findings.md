@@ -223,8 +223,9 @@ would require, and whether they sit inside published ranges).
   level only via API key); FRED mirror timed out.
 
 ## Full-source run (2026-11-19)
-- 27 national voices + 4 county voices. Ensemble 354,161,842 (CI
-  338.3M-370.3M), ratio 1.048. New voices: electricity meters 343.5M
+- 27 national voices + 4 county voices. Ensemble 356,412,430 (CI
+  338.3M-370.3M), ratio 1.048. Corrects the number in the previous
+commit message, which was written from memory (354,161,842 was wrong). New voices: electricity meters 343.5M
   (143.1M x 2.40), gas customers 313.3M, enplanements 347.5M, transit
   348.6M, college 340.0M, food spend 339.4M, library visits 334.7M,
   irs_agi 328.3M, total energy 339.7M, gas volume 335.0M, deaths 308.7M.
