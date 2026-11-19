@@ -204,6 +204,25 @@ def run(year: int = 2024, api_key: str | None = None) -> dict:
     step("Education (NCES enrollment)...")
     national.add_national(methods, "education", national.education)
 
+    step("College enrollment (IPEDS)...")
+    national.add_national(methods, "college", national.college)
+
+    step("Utility meters (EIA-861 + gas customers)...")
+    national.add_national(methods, "electricity_meters",
+                          national.electricity_meters)
+    national.add_national(methods, "gas_meters", national.gas_meters)
+
+    step("Travel (FAA enplanements, NTD transit)...")
+    national.add_national(methods, "enplanements", national.enplanements)
+    national.add_national(methods, "transit", national.transit)
+
+    step("Libraries (IMLS visits)...")
+    national.add_national(methods, "library_visits", national.library_visits)
+
+    step("Food expenditure (ERS)...")
+    national.add_national(methods, "food_expenditure",
+                          national.food_expenditure)
+
     step("Water systems (EPA SDWIS CWS served)...")
     national.add_national(methods, "sdwis", national.sdwis)
 

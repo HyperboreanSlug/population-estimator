@@ -196,3 +196,37 @@ would require, and whether they sit inside published ranges).
   from the old scripts). Subscription counts are CTIA-proprietary and
   the FCC does not publish them; the wireless voice stays on the CTIA
   literature constant, documented.
+
+## Subagent sweep 3 (the 11 new sources) 2026-11-19, verified
+- EIA-861 2024 meters: f8612024.zip, Sales_Ult_Cust_2024.xlsx, sheet
+  States, col 'Count' (residential customers). CRITICAL: Service Type
+  Energy rows (14.79M) double-count retail-choice customers already
+  reported by delivery utilities; Bundled+Delivery = 143,144,185
+  (CA 14.2M matches ~14M households; all-service sum was 157.9M).
+- Gas customers: NG_CONS_NUM_A_EPG0_VN3_COUNT_A.xls (BIFF8, xlrd);
+  sheet 'Data 1', row1 = sourcekeys (US ends _NUS_8), row2 = names;
+  2024-06-30 US = 73,719,064.
+- FAA: arp-cy2025-commercial-service-enplanements.xlsx, 'CY 25
+  Enplanements' col sum = 973,022,705. TSA: HTML only, no data file.
+- NTD: data.transportation.gov/resource/wwdp-t4re.csv with
+  time_period=Annual Total filter. PAGINATION TRAP: Socrata defaults to
+  1000 rows; $limit=50000 required (2024 = 7,669,135,219 complete).
+- IPEDS: Digest tabn303.10.xlsx, 2023 = 19,039,584 degree-granting
+  enrollment.
+- ERS food: food-expenditures-by-final-purchaser.csv; 2025 nominal
+  all-purchaser total = $2,511,754.82M (6 purchaser columns).
+- IMLS PLS FY2023: pls_fy2023_csv.zip, PLS_FY23_AE_pud23i.csv,
+  VISITS = 803,361,298, REGBOR = 155,762,511.
+- Blocked, honestly: SSA statcomps 403 to this network (all paths);
+  USFWS license reports origin dead (HTTP 530); HUD USPS
+  registration-gated; BEA bulk tree replaced by JS app shell (PCE
+  level only via API key); FRED mirror timed out.
+
+## Full-source run (2026-11-19)
+- 27 national voices + 4 county voices. Ensemble 354,161,842 (CI
+  338.3M-370.3M), ratio 1.048. New voices: electricity meters 343.5M
+  (143.1M x 2.40), gas customers 313.3M, enplanements 347.5M, transit
+  348.6M, college 340.0M, food spend 339.4M, library visits 334.7M,
+  irs_agi 328.3M, total energy 339.7M, gas volume 335.0M, deaths 308.7M.
+- Reconciliation now 27 constants: census 4/27 outside, 450M 21/27,
+  500M 25/27.

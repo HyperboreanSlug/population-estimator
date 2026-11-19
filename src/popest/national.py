@@ -141,6 +141,105 @@ def education() -> dict:
             "source": "NCES public K-12 enrollment 2024-25"}
 
 
+def college() -> dict:
+    """Population from IPEDS higher-education enrollment."""
+    from popest.constants import COLLEGE_ENROLLMENT_SHARE
+    from popest.education import higher_ed_enrollment
+
+    r = higher_ed_enrollment()
+    if not r:
+        return {}
+    return {"central": r["enrollment"] / COLLEGE_ENROLLMENT_SHARE.central,
+            "low": r["enrollment"] / COLLEGE_ENROLLMENT_SHARE.high,
+            "high": r["enrollment"] / COLLEGE_ENROLLMENT_SHARE.low,
+            "form": "inverse",
+            "source": f"IPEDS fall {r['year']} enrollment "
+                      f"({r['enrollment']:,.0f})"}
+
+
+def electricity_meters() -> dict:
+    from popest.methods.meters import estimate
+
+    r = estimate()
+    if not r or r.get("electricity_meters_central", 0) <= 0:
+        return {}
+    return {"central": r["electricity_meters_central"],
+            "low": r["electricity_meters_low"],
+            "high": r["electricity_meters_high"], "form": "direct",
+            "source": f"EIA-861 meters {r['meters_count']:,.0f} "
+                      f"(Bundled+Delivery)"}
+
+
+def gas_meters() -> dict:
+    from popest.methods.meters import estimate
+
+    r = estimate()
+    if not r or r.get("gas_meters_central", 0) <= 0:
+        return {}
+    return {"central": r["gas_meters_central"],
+            "low": r["gas_meters_low"],
+            "high": r["gas_meters_high"], "form": "direct",
+            "source": f"EIA gas customers {r['gas_customers_count']:,.0f} "
+                      f"({r['gas_year']})"}
+
+
+def enplanements() -> dict:
+    from popest.methods.travel import estimate
+
+    r = estimate()
+    if not r or r.get("enplanements_central", 0) <= 0:
+        return {}
+    return {"central": r["enplanements_central"],
+            "low": r["enplanements_low"],
+            "high": r["enplanements_high"], "form": "inverse",
+            "source": f"FAA enplanements CY{r['enplanements_year']} "
+                      f"({r['enplanements_count']:,.0f})"}
+
+
+def transit() -> dict:
+    from popest.methods.travel import estimate
+
+    r = estimate()
+    if not r or r.get("transit_central", 0) <= 0:
+        return {}
+    return {"central": r["transit_central"],
+            "low": r["transit_low"],
+            "high": r["transit_high"], "form": "inverse",
+            "source": f"NTD unlinked trips {r['transit_year']} "
+                      f"({r['transit_trips_count']:,.0f})"}
+
+
+def library_visits() -> dict:
+    from popest.methods.travel import estimate
+
+    r = estimate()
+    if not r or r.get("library_visits_central", 0) <= 0:
+        return {}
+    return {"central": r["library_visits_central"],
+            "low": r["library_visits_low"],
+            "high": r["library_visits_high"], "form": "inverse",
+            "source": f"IMLS visits FY{r['library_fiscal_year']} "
+                      f"({r['library_visits_count']:,.0f}); "
+                      f"registered borrowers "
+                      f"{r['registered_borrowers_reported']:,.0f} reported"}
+
+
+def food_expenditure() -> dict:
+    """Population from USDA ERS total food expenditure."""
+    from popest.constants import FOOD_EXPENDITURE_PER_CAPITA
+    from popest.consumption import food_expenditure as fetch
+
+    r = fetch()
+    if not r:
+        return {}
+    return {"central": r["total_dollars"] / FOOD_EXPENDITURE_PER_CAPITA.central,
+            "low": r["total_dollars"] / FOOD_EXPENDITURE_PER_CAPITA.high,
+            "high": r["total_dollars"] / FOOD_EXPENDITURE_PER_CAPITA.low,
+            "form": "inverse",
+            "source": f"ERS food expenditure {r['year']} "
+                      f"(${r['total_dollars']/1e12:.2f}T all purchasers)"}
+
+
 def sdwis() -> dict:
     from popest.methods.sdwis import estimate
 
@@ -241,6 +340,13 @@ def collect_all(methods: dict) -> None:
     add_national(methods, "irs_agi", agi)
     add_national(methods, "bls", bls)
     add_national(methods, "education", education)
+    add_national(methods, "college", college)
+    add_national(methods, "electricity_meters", electricity_meters)
+    add_national(methods, "gas_meters", gas_meters)
+    add_national(methods, "enplanements", enplanements)
+    add_national(methods, "transit", transit)
+    add_national(methods, "library_visits", library_visits)
+    add_national(methods, "food_expenditure", food_expenditure)
     add_national(methods, "sdwis", sdwis)
     add_national(methods, "medicare", medicare)
     add_national(methods, "total_energy", total_energy)

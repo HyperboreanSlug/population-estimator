@@ -153,7 +153,7 @@ def test_discrepancy_report_values():
 def test_weights_sum_near_one_with_census_cap():
     from popest.ensemble import METHOD_WEIGHTS
 
-    assert sum(METHOD_WEIGHTS.values()) <= 1.30
+    assert sum(METHOD_WEIGHTS.values()) <= 1.45
     physical = sum(v for k, v in METHOD_WEIGHTS.items()
                    if k not in ("census",))
     assert physical > 0.85  # physical methods keep the bulk of weight

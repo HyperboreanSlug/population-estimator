@@ -31,10 +31,17 @@ METHOD_WEIGHTS = {
     "irs_agi": 0.04,
     "bls": 0.05,
     "education": 0.04,
+    "college": 0.02,
     "sdwis": 0.06,
     "medicare": 0.04,
     "total_energy": 0.03,
     "gas_volume": 0.03,
+    "electricity_meters": 0.03,
+    "gas_meters": 0.02,
+    "enplanements": 0.02,
+    "transit": 0.01,
+    "library_visits": 0.01,
+    "food_expenditure": 0.02,
 }
 
 CENSUS_WEIGHT_CAP = 0.15

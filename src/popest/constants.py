@@ -208,6 +208,72 @@ GAS_RESIDENTIAL_PER_CAPITA = PerCapitaConstant(
            "denominator; heating-climate variance is wide.",
 )
 
+PERSONS_PER_METER = PerCapitaConstant(
+    central=2.40,
+    low=2.10,
+    high=2.70,
+    unit="persons/residential meter",
+    source="Persons per residential electricity meter (EIA-861 "
+           "Bundled+Delivery customers). ~2.5 persons per occupied "
+           "household discounted ~5% for seasonal/vacant units with "
+           "meters. Census-informed denominator; physical meter count.",
+)
+
+GAS_PERSONS_PER_CUSTOMER = PerCapitaConstant(
+    central=4.25,
+    low=3.50,
+    high=5.20,
+    unit="persons/gas customer",
+    source="Persons per residential gas customer: ~2.5 persons/household "
+           "/ ~0.59 share of households with delivered gas (RECS ~61% "
+           "use gas). Census-informed denominator; physical meter count.",
+)
+
+ENPLANEMENTS_PER_CAPITA = PerCapitaConstant(
+    central=2.80,
+    low=2.30,
+    high=3.40,
+    unit="boardings/person/year",
+    source="FAA commercial enplanements per capita. Census-informed "
+           "denominator; metered security screenings.",
+)
+
+TRANSIT_TRIPS_PER_CAPITA = PerCapitaConstant(
+    central=22.0,
+    low=15.0,
+    high=32.0,
+    unit="trips/person/year",
+    source="NTD unlinked passenger trips per capita. Very wide range "
+           "(urbanization); smallest weight.",
+)
+
+COLLEGE_ENROLLMENT_SHARE = PerCapitaConstant(
+    central=0.056,
+    low=0.050,
+    high=0.062,
+    unit="fraction of population",
+    source="IPEDS fall enrollment in degree-granting institutions as "
+           "share of population. Census-informed denominator.",
+)
+
+FOOD_EXPENDITURE_PER_CAPITA = PerCapitaConstant(
+    central=7400.0,
+    low=6300.0,
+    high=8600.0,
+    unit="dollars/person/year",
+    source="USDA ERS all-purchaser nominal food expenditure per capita. "
+           "Census-informed denominator.",
+)
+
+LIBRARY_VISITS_PER_CAPITA = PerCapitaConstant(
+    central=2.40,
+    low=1.70,
+    high=3.10,
+    unit="visits/person/year",
+    source="IMLS public library visits per capita. Census-informed "
+           "denominator; wide local variance.",
+)
+
 GAL_PER_MGAL = 1_000_000.0
 GRAMS_PER_LB = 453.592
 MGD_TO_GAL_DAY = 1_000_000.0

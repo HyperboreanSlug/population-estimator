@@ -102,6 +102,42 @@ def gather_totals() -> dict:
     if not enroll.empty:
         totals["enrollment"] = float(enroll["enrollment"].sum())
 
+    from popest.education import higher_ed_enrollment
+
+    college = higher_ed_enrollment()
+    if college:
+        totals["college"] = college["enrollment"]
+
+    from popest.meters import (
+        residential_electricity_meters,
+        residential_gas_customers,
+    )
+
+    meters = residential_electricity_meters()
+    if not meters.empty:
+        totals["meters"] = float(meters["meters"].sum())
+    gas_customers = residential_gas_customers()
+    if gas_customers:
+        totals["gas_customers"] = gas_customers["customers"]
+
+    from popest.travel import enplanements, library_survey, transit_trips
+
+    faa = enplanements()
+    if faa:
+        totals["enplanements"] = faa["total"]
+    ntd = transit_trips()
+    if ntd:
+        totals["transit_trips"] = ntd["total"]
+    lib = library_survey()
+    if lib:
+        totals["library_visits"] = lib["visits"]
+
+    from popest.consumption import food_expenditure as food_fetch
+
+    food = food_fetch()
+    if food:
+        totals["food_spend"] = food["total_dollars"]
+
     from popest.sdwis import cws_population_served
 
     served = cws_population_served()
@@ -178,6 +214,20 @@ ROWS = [
      "units_pph", 1.0, "assumes occupancy 0.87, GQ 2.5%"),
     ("K-12 enrollment share", "fraction", "enrollment", 0.140, 0.155,
      "divide", 1.0, "NCES 2024-25 enrollment"),
+    ("college enrollment share", "fraction", "college", 0.050, 0.062,
+     "divide", 1.0, "IPEDS fall enrollment"),
+    ("electricity meters", "meters/person", "meters", 0.3704, 0.4762,
+     "divide", 1.0, "EIA-861 Bundled+Delivery customers"),
+    ("gas customers", "customers/person", "gas_customers", 0.1923, 0.2857,
+     "divide", 1.0, "EIA residential gas consumers"),
+    ("air enplanements", "boardings/person/year", "enplanements", 2.30, 3.40,
+     "divide", 1.0, "FAA CY2025 commercial service"),
+    ("transit trips", "trips/person/year", "transit_trips", 15.0, 32.0,
+     "divide", 1.0, "NTD annual unlinked trips (urbanization-wide)"),
+    ("food expenditure", "dollars/person/year", "food_spend", 6300.0, 8600.0,
+     "divide", 1.0, "ERS all-purchaser nominal spend"),
+    ("library visits", "visits/person/year", "library_visits", 1.70, 3.10,
+     "divide", 1.0, "IMLS PLS annual visits"),
     ("CWS water coverage", "fraction", "cws_served", 0.82, 0.88,
      "divide", 1.0, "USGS share on community water"),
     ("VMT", "miles/person/year", "vmt", 8500.0, 11000.0,

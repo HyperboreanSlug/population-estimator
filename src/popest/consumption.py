@@ -85,6 +85,32 @@ def grocery_sales_national() -> dict:
     }
 
 
+def food_expenditure() -> dict:
+    """USDA ERS all-purchaser nominal food expenditure, latest year.
+
+    Source: data/usda/food_expenditures.csv. Sums the six nominal
+    purchaser columns (household/government/home-production at home;
+    household/government/businesses away from home).
+    """
+    path = Path("data/usda/food_expenditures.csv")
+    if not path.exists():
+        return {}
+    fe = pd.read_csv(path)
+    nom = [c for c in fe.columns
+           if "constant" not in c.lower() and c != "Year"]
+    latest = fe.iloc[-1]
+    total_millions = sum(pd.to_numeric(latest[c], errors="coerce")
+                         for c in nom)
+    if pd.isna(total_millions):
+        return {}
+    return {
+        "year": int(latest["Year"]),
+        "total_dollars": float(total_millions) * 1e6,
+        "source": "data/usda/food_expenditures.csv "
+                  "(ERS food expenditure series, all purchasers)",
+    }
+
+
 def estimate_consumption() -> dict:
     """Population estimates from consumption data."""
     results = {}

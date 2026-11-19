@@ -46,6 +46,30 @@ def public_enrollment() -> pd.DataFrame:
         "STUDENT_COUNT": "enrollment"})
 
 
+def higher_ed_enrollment() -> dict:
+    """Total fall enrollment in degree-granting institutions.
+
+    Source: data/nces/tabn303.10.xlsx (NCES Digest table 303.10).
+    Column 1 is total enrollment; the latest year row is used.
+    """
+    path = Path("data/nces/tabn303.10.xlsx")
+    if not path.exists():
+        return {}
+    ip = pd.read_excel(path, header=None)
+    rows = []
+    for i in range(len(ip)):
+        yr = str(ip.iloc[i, 0]).strip()
+        v = pd.to_numeric(ip.iloc[i, 1], errors="coerce")
+        if pd.notna(v) and yr[:4].isdigit() and len(yr) >= 4:
+            rows.append((int(yr[:4]), float(v)))
+    if not rows:
+        return {}
+    year, total = max(rows)
+    return {"year": year, "enrollment": total,
+            "source": "data/nces/tabn303.10.xlsx "
+                      "(NCES Digest 303.10, degree-granting)"}
+
+
 def _read_fy_xlsx(path: Path, fy_col: str, value_col: str) -> dict:
     """Read a small FNS XLSX: latest FY row for one value column."""
     if not path.exists():
