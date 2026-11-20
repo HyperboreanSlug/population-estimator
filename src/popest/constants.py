@@ -74,14 +74,17 @@ TSS = PerCapitaConstant(
 )
 
 ELECTRICITY_RESIDENTIAL = PerCapitaConstant(
-    central=4200.0,
+    central=4330.0,
     low=3500.0,
     high=5200.0,
     unit="kWh/person/year",
-    source="EIA RECS 2020: ~10,500 kWh average site consumption per "
-           "HOUSEHOLD; average household ~2.5 people (RECS) gives "
-           "~4,200 kWh/person. The 10,500 figure is per household, not "
-           "per person; using it per person understated population ~2.5x.",
+    source="RECS 2020 microdata, survey-weighted: total electricity "
+           "10,565.8 kWh per household / 2.44 persons per household "
+           "(NHSLDMEM, NWEIGHT) = 4,330.5 kWh/person. De-circularized "
+           "from total/population to a survey-derived per-capita. "
+           "scripts/derive_recs_constants.py reproduces this from "
+           "data/eia/recs2020_public_v7.csv (EIA RECS 2020 public "
+           "use file v7).",
 )
 
 MSW_GENERATION = PerCapitaConstant(
@@ -210,14 +213,16 @@ GAS_RESIDENTIAL_PER_CAPITA = PerCapitaConstant(
 )
 
 PERSONS_PER_METER = PerCapitaConstant(
-    central=2.40,
+    central=2.32,
     low=2.10,
     high=2.70,
     unit="persons/residential meter",
-    source="Persons per residential electricity meter (EIA-861 "
-           "Bundled+Delivery customers). ~2.5 persons per occupied "
-           "household discounted ~5% for seasonal/vacant units with "
-           "meters. Census-informed denominator; physical meter count.",
+    source="RECS 2020 microdata, survey-weighted: 2.44 persons per "
+           "occupied household (NHSLDMEM, NWEIGHT) x 0.95 seasonal/"
+           "vacant-meter discount (RECS samples occupied units only; "
+           "the discount stays an engineering factor). Physical meter "
+           "count from EIA-861. scripts/derive_recs_constants.py "
+           "reproduces the 2.44 from data/eia/recs2020_public_v7.csv.",
 )
 
 GAS_PERSONS_PER_CUSTOMER = PerCapitaConstant(
@@ -225,9 +230,18 @@ GAS_PERSONS_PER_CUSTOMER = PerCapitaConstant(
     low=3.50,
     high=5.20,
     unit="persons/gas customer",
-    source="Persons per residential gas customer: ~2.5 persons/household "
-           "/ ~0.59 share of households with delivered gas (RECS ~61% "
-           "use gas). Census-informed denominator; physical meter count.",
+    source="Persons per residential gas METER. Census-informed "
+           "denominator (~2.5 persons/household / ~0.59 household "
+           "share with delivered gas). A RECS household-basis "
+           "de-circularization FAILS here: RECS 2020 shows 72.5% of "
+           "households have gas service (UGASHERE), giving 2.44/0.725 "
+           "= 3.36 persons per gas HOUSEHOLD, but the EIA 73.7M "
+           "customer count is meters (master-metered apartments "
+           "compress many households into one account), and bridging "
+           "meters to households requires a census household count. "
+           "The census-informed 4.25 stays; the honest RECS-derived "
+           "range (3.36 to 4.61 depending on metering basis) brackets "
+           "it.",
 )
 
 ENPLANEMENTS_PER_CAPITA = PerCapitaConstant(

@@ -339,3 +339,49 @@ commit message, which was written from memory (354,161,842 was wrong). New voice
 - Post-correction ensemble: 344,666,317 (CI 332.0M-356.4M), ratio
   1.013; census capped share 11.0%. Audit script committed as
   scripts/audit_weights.py for repeatable verification.
+
+## Step-2 levers + self-review (operator order 2026-11-19/20)
+
+### Bugs found in my own first RECS derivation and fixed
+- Naive split(',') over the 799-column RECS CSV misaligned the gas
+  region (script max CUFEETNG 11,091 vs row-1 BTUNG 101,924; every
+  row passed the not--2 filter on a column that must be -2 for
+  non-gas homes). The csv-module redo verified KWH by the internal
+  BTUEL = KWH x 3.412 identity (3 rows exact).
+- Missing survey weights: unweighted avg kWh/hh 10,848.8 vs weighted
+  10,565.8. My first constant 4,408.3 was 1.8% high; correct is
+  4,330.5 (weighted total/total).
+- Wrong household-size basis: NUMCHILD+NUMADULT1+NUMADULT2 (2.461
+  unweighted) instead of NHSLDMEM (2.4399 weighted).
+- Wrong gas-fraction basis: FUELHEAT codes 1-2 (0.569, includes
+  propane, misses non-heating gas homes) instead of UGASHERE gas
+  service (0.725 weighted). The household-basis ratio 2.44/0.725 =
+  3.36 is NOT the meter-basis constant: EIA's 73.7M customers are
+  meters (master-metered apartments), and RECS cannot bridge meters
+  to households without a census household count. GAS_PERSONS_
+  PER_CUSTOMER reverted to 4.25 with the failure documented.
+- Dropped the ~5% seasonal/vacant meter discount in PERSONS_PER_
+  METER (2.461 -> should be 2.44 x 0.95 = 2.32).
+
+### Net effect of the corrected de-circularization
+- Energy voice 353.1M -> 342.5M (constant 4200 -> 4330.5 RECS);
+  meters voice 343.5M -> 332.1M (2.40 -> 2.32); gas meters
+  unchanged (reverted). Ensemble 344,666,317 -> 343,946,057
+  (-0.21%). Direction DOWN: the census-informed constants were
+  not suppressing the estimate.
+
+### PES and DHS levers closed out with file-verified sources
+- Census 2020 PES report PDF (net-coverage-error...pdf, dlgate
+  sha 336e595c...): national net coverage error -0.24% (SE 0.25).
+  Added as a REPORTED note: PES-adjusted census 340,927,254;
+  ensemble effect < 0.1M at the 0.15 cap.
+- DHS CBP FY2023 Entry/Exit Overstay Report (sha ddb81640...):
+  510,363 suspected in-country overstays at FY2023 end (1.31% of
+  39,005,712 expected departures), 399,708 by May 2024; DHS
+  nonimmigrant admissions FY2023 report (sha 25bec3bf...): 53
+  million I-94 admissions. Added as a REPORTED note with the
+  stock-vs-flow distinction and the 450M scale test (+13M max
+  from visa/undocumented populations vs ~106M needed).
+- scripts/derive_recs_constants.py committed: reproduces the
+  constants from data/eia/recs2020_public_v7.csv (gitignored like
+  all data files; download URL in the script docstring).

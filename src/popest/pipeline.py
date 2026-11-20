@@ -330,6 +330,46 @@ def run(year: int = 2024, api_key: str | None = None) -> dict:
                 f"vehicles method calibrates on; not substituted.")
     except Exception as e:
         print(f"  VM-1 vehicles reported voice FAILED: {e}")
+    try:
+        # 2020 PES: national net coverage error -0.24% (SE 0.25),
+        # file-verified from the Census Bureau PES report
+        # (net-coverage-error-and-components-of-coverage-by-race-
+        # hispanic-origin.pdf, Table A total row). The -782,000 person
+        # equivalent is the published Census story figure. Applied to
+        # PEP 2024 the adjustment is +0.8M: 340.1M -> 340.9M; kept as
+        # a REPORTED note (census-family, below the 0.15 cap, net
+        # effect on the ensemble < 0.1M).
+        pes_rate = 0.0024
+        pes_adjusted = census_pop * (1.0 + pes_rate)
+        notes.append(
+            f"2020 PES net coverage error (REPORTED): -0.24% "
+            f"(SE 0.25, -782,000 people equivalent, Census PES "
+            f"report). PES-adjusted census: {pes_adjusted:,.0f}; "
+            f"kept as a note, not a voice (census-family, ensemble "
+            f"effect < 0.1M at the 0.15 cap).")
+    except Exception as e:
+        print(f"  PES reported note FAILED: {e}")
+    try:
+        # DHS CBP FY2023 Entry/Exit Overstay Report (file-verified):
+        # 510,363 suspected in-country overstays at end of FY2023
+        # (1.31% of 39,005,712 expected departures), reduced to
+        # 399,708 by May 2024. DHS nonimmigrant admissions FY2023:
+        # 53 million I-94 admissions (54% B-2 tourists + 23% WT).
+        # FLOW figures, not resident stock; published stock
+        # estimates are ~1.5-2M nonimmigrant residents and ~11-12M
+        # unauthorized (DHS residual, census-derived). Both groups
+        # are inside the census resident definition and PEP.
+        notes.append(
+            f"DHS I-94 nonimmigrant FLOW (REPORTED): FY2023 "
+            f"53,000,000 I-94 admissions; 510,363 suspected "
+            f"in-country overstays at year end (1.31% of "
+            f"39,005,712 expected departures), 399,708 by "
+            f"May 2024. Resident stock ~1.5-2M nonimmigrants "
+            f"+ ~11-12M unauthorized (published estimates); "
+            f"both inside census/PEP denominators; +13M cannot "
+            f"reach a 450M claim.")
+    except Exception as e:
+        print(f"  DHS I-94 reported note FAILED: {e}")
 
     # --- combine ------------------------------------------------------
     print("\n" + "=" * 60)

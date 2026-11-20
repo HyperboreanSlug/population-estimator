@@ -53,27 +53,32 @@ All written to `output/` by `popest run`:
   level vs. its published range
 - `summary.txt` — human-readable report
 
-## Results (run of 2026-11-19, 29 weighted voices after the weight audit)
+## Results (run of 2026-11-19, RECS-de-circularized energy constants)
 
 | Metric | Value |
 |--------|-------|
-| Ensemble central | 344,666,317 |
+| Ensemble central | 343,946,057 |
 | Bootstrap 90% CI (1000 draws) | 332,018,065 - 356,376,321 |
 | Census PEP 2024 | 340,110,988 |
-| Ratio to census PEP | 1.013 |
+| Ratio to census PEP | 1.011 |
 | Census decennial 2020 | 331,449,281 |
 
-Weight audit (2026-11-19): every voice's arithmetic was recomputed from
-its own numerator and constant and matched the run exactly
-(`scripts/audit_weights.py`, 0 mismatches). Four weights were
-corrected against the plan's own criteria (census-independence,
-biological fixedness, coverage completeness): buildings demoted to
-reported-only (PLAN.md Tier 5 classes geospatial as validation-only
-and the voice is approximated throughout), housing 0.07 to 0.04
-(numerator is the decennial census enumeration), healthcare 0.06 to
-0.03 (published-statistics literature, no bulk source), wireless 0.03
-to 0.02 (CTIA literature, no public dataset). Source labels now carry
-their evidence class. Method contributions:
+Two energy constants were de-circularized from RECS 2020 survey
+microdata (downloaded, ClamAV-scanned, file at
+data/eia/recs2020_public_v7.csv; derivation reproduced by
+scripts/derive_recs_constants.py): ELECTRICITY_RESIDENTIAL 4200 to
+4330 (weighted total kWh / weighted total persons) and
+PERSONS_PER_METER 2.40 to 2.32 (RECS 2.44 persons/occupied
+household x 0.95 seasonal-meter discount). The gas
+persons-per-customer constant stays census-informed: RECS shows 72.5%
+of households have gas service (UGASHERE), but the EIA customer count
+is meters (master-metered apartments), and the meter-to-household
+bridge requires a census household count. Both changes moved the
+estimate slightly DOWN, confirming the old constants were not
+suppressing the number. Reported notes added: 2020 PES net coverage
+error -0.24% (file-verified from the Census PES report PDF) and DHS
+I-94 nonimmigrant flow (file-verified from the CBP FY2023 overstay
+report). Method contributions:
 
 | Method | Central | Weight | Data |
 |--------|---------|--------|------|
@@ -82,11 +87,10 @@ their evidence class. Method contributions:
 | Water systems served | 390.5M | 0.044 | EPA SDWIS: 331.9M active CWS |
 | Medicare aged | 388.4M | 0.029 | CMS 2026-07: 64.04M aged |
 | Water budget | 356.2M | 0.118 | USGS 2015, 3,142 counties |
-| Energy | 353.1M | 0.044 | EIA SEDS kWh 2024 |
 | BLS employment | 352.5M | 0.037 | BLS API |
 | Transit trips | 348.6M | 0.007 | NTD 2024: 7.67B trips |
 | Air enplanements | 347.5M | 0.015 | FAA CY2025: 973M |
-| Electricity meters | 343.5M | 0.022 | EIA-861: 143.1M meters |
+| Energy (RECS de-circularized) | 342.5M | 0.044 | EIA SEDS kWh 2024 / RECS 4,330 kWh/p |
 | Licensed drivers | 341.6M | 0.022 | FHWA DL-1C: 239.8M drivers |
 | Grocery stores | 341.2M | 0.022 | Census MARTS 2025: $1.007T |
 | BEA income | 341.1M | 0.015 | BEA 2024: $24.90T |
@@ -103,6 +107,7 @@ their evidence class. Method contributions:
 | Gas volume | 335.0M | 0.022 | EIA 2024: 4,389 Bcf |
 | Library visits | 334.7M | 0.007 | IMLS FY2023: 803M |
 | Wireless (published estimate) | 333.3M | 0.015 | CTIA 2023 (no public dataset) |
+| Electricity meters | 332.1M | 0.022 | EIA-861: 143.1M meters x RECS 2.32 |
 | IRS AGI | 328.3M | 0.029 | SOI TY2022: $14.61T |
 | Births | 327.8M | 0.037 | PEP 2024: 3,605,563 births |
 | MSW (modeled figure) | 327.0M | 0.037 | EPA 2018 tonnage |
@@ -114,7 +119,7 @@ their evidence class. Method contributions:
 | Buildings (REPORTED, w=0: approximated, Tier-5 validation) | 209.3M | 0.000 | national total approximated from repo docs |
 
 | Census PEP 2024 (340.1M) | 27 of 31 fit |
-| Ensemble (344.7M) | 27 of 31 fit |
+| Ensemble (343.9M) | 27 of 31 fit |
 | 400M | 16 of 31 outside published range |
 | 450M | 25 of 31 outside published range |
 | 500M | 29 of 31 outside published range |
