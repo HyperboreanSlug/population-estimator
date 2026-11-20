@@ -118,9 +118,9 @@ def render():
 <html lang="en"><head><meta charset="utf-8">
 <style>
   * {{ margin:0; padding:0; box-sizing:border-box; }}
-  body {{ background:#eef1f5; font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
-         color:#101828; display:flex; justify-content:center; padding:28px 0; }}
-  .card {{ background:#fff; border-radius:18px; box-shadow:0 12px 40px rgba(16,24,40,.12);
+  body {{ background:#fff; font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+         color:#101828; display:flex; justify-content:center; padding:0; }}
+  .card {{ background:#fff; border-radius:18px;
           width:1080px; overflow:hidden; }}
   .head {{ padding:34px 40px 24px; border-bottom:1px solid #eaecf0; }}
   .kicker {{ font-size:13px; letter-spacing:.18em; color:#475467; font-weight:600;
@@ -184,8 +184,6 @@ def render():
   .rval {{ width:52px; font-size:11.5px; color:#475467; font-variant-numeric:tabular-nums; }}
   .vref {{ position:absolute; top:0; bottom:0; width:0; border-left:2px dashed #101828; left:0; }}
   .vref.ens {{ border-left:2px solid #3b6fd4; }}
-  .foot {{ border-top:1px solid #eaecf0; padding:12px 40px; font-size:11px; color:#98a2b3;
-          display:flex; justify-content:space-between; }}
   .axline {{ position:relative; height:16px; margin-left:168px; margin-right:62px;
             font-size:10px; color:#98a2b3; }}
   .axline span {{ position:absolute; transform:translateX(-50%); }}
@@ -253,10 +251,6 @@ def render():
       </div>
     </div>
   </div>
-  <div class="foot">
-    <span>Physical evidence primary · census capped 15% · reported-only: wastewater design capacity, building footprints</span>
-    <span>generated from output/summary.txt · scripts/estimate_card.py</span>
-  </div>
 </div></body></html>'''
     Path('output/estimate_card.html').write_text(html)
     print(f'wrote output/estimate_card.html ({n_rows} voices)')
@@ -276,10 +270,9 @@ def to_png():
     bbox = ImageChops.difference(
         img, Image.new('RGB', img.size, bg)).getbbox()
     if bbox:
-        pad = 24
-        img.crop((max(0, bbox[0]-pad), max(0, bbox[1]-pad),
-                  min(img.width, bbox[2]+pad),
-                  min(img.height, bbox[3]+pad))).save('output/estimate_card.png')
+        img.crop((max(0, bbox[0]), max(0, bbox[1]),
+                  min(img.width, bbox[2]),
+                  min(img.height, bbox[3]))).save('output/estimate_card.png')
     print('wrote output/estimate_card.png')
 
 
