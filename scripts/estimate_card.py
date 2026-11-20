@@ -66,17 +66,22 @@ def build(summary_path='output/summary.txt'):
         m = re.match(r'\s*(\S+)\s+([\d,]+)\s+w=([\d.]+)\s+\(([\d,]+) - ([\d,]+)\)\s+(.*)', line)
         if m:
             name, central, w, rlo, rhi, note = m.groups()
-            rows.append((name, num(central), num(rlo), num(rhi)))
+            rows.append((name, num(central), num(rlo), num(rhi), float(w)))
         else:
             m2 = re.match(r'\s*census\s+([\d,]+)\s+w=', line)
             if m2:
                 v = num(m2.group(1))
-                rows.append(('census (PEP 2024)', v, v, v))
+                rows.append(('census (PEP 2024)', v, v, v, 1.0))
 
+    n_weighted = sum(1 for r in rows if r[4] > 0)
+    n_reported = len(rows) - n_weighted
     bar_rows = []
-    for name, central, rlo, rhi in rows:
+    for name, central, rlo, rhi, w in rows:
         label = NAMES.get(name, name)
+        reported = (w == 0.0)
         cls = 'census-row' if name.startswith('census') else ''
+        if reported:
+            cls = 'reported-row'
         dot_cls = 'census-dot' if name.startswith('census') else 'dot'
         bar_rows.append(
             f'<div class="row {cls}"><div class="rlabel">{label}</div>'
@@ -85,12 +90,13 @@ def build(summary_path='output/summary.txt'):
             f'<div class="{dot_cls}" style="left:{pct(central):.1f}%"></div></div>'
             f'<div class="rval">{central/1e6:.1f}M</div></div>')
     chart = '\n'.join(bar_rows)
-    return ensemble, lo, hi, pep, dec, chart, len(rows), verdicts, n_const
+    return (ensemble, lo, hi, pep, dec, chart, len(rows), verdicts,
+            n_const, n_weighted, n_reported)
 
 
 def render():
     (ensemble, lo, hi, pep, dec, chart, n_rows,
-     verd, n_const) = build()
+     verd, n_const, n_weighted, n_reported) = build()
 
     def verdicts_out(level):
         outside, fits = verd[level]
@@ -171,6 +177,10 @@ def render():
   .census-dot {{ position:absolute; top:0.5px; width:8px; height:8px; border-radius:2px;
                 background:#101828; transform:translateX(-50%) rotate(45deg); }}
   .census-row .rlabel {{ font-weight:700; }}
+  .reported-row .rlabel {{ color:#98a2b3; font-style:italic; }}
+  .reported-row .dot {{ background:#cbd5e1; }}
+  .reported-row .range {{ background:#eaecf0; }}
+  .reported-row .rval {{ color:#98a2b3; }}
   .rval {{ width:52px; font-size:11.5px; color:#475467; font-variant-numeric:tabular-nums; }}
   .vref {{ position:absolute; top:0; bottom:0; width:0; border-left:2px dashed #101828; left:0; }}
   .vref.ens {{ border-left:2px solid #3b6fd4; }}
@@ -184,7 +194,7 @@ def render():
   <div class="head">
     <div class="kicker">Population Estimator · Physical Evidence Ensemble</div>
     <h1>United States Estimated Population</h1>
-    <div class="sub">31 measured national sources · 4 county-level voices · census capped at 15% · wastewater design capacity reported-only</div>
+    <div class="sub">{n_weighted} weighted voices · {n_reported} reported-only (not weighted) · census capped at 15% · RECS-de-circularized energy constants</div>
   </div>
   <div class="grid">
     <div class="left">
@@ -227,6 +237,7 @@ def render():
       <div class="legend">
         <span><span class="sw"></span>Census PEP 2024: {pep/1e6:.1f}M</span>
         <span><span class="sw ens"></span>Ensemble: {ensemble/1e6:.1f}M</span>
+        <span style="color:#98a2b3">▪ gray = reported-only (w=0, not in ensemble)</span>
       </div>
       <div class="chartwrap">
         <div class="vref" style="left:{track_x(pep):.0f}px"></div>
@@ -243,7 +254,7 @@ def render():
     </div>
   </div>
   <div class="foot">
-    <span>Physical evidence primary · census capped 15% · wastewater design capacity reported-only</span>
+    <span>Physical evidence primary · census capped 15% · reported-only: wastewater design capacity, building footprints</span>
     <span>generated from output/summary.txt · scripts/estimate_card.py</span>
   </div>
 </div></body></html>'''
